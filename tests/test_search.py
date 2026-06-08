@@ -152,13 +152,13 @@ def test_search_bar_case_insensitive(page, test_config):
     # Arrange
     login(page, test_config)
 
-    # Act — nhập chữ thường
+    # Act
     flutter_fill(page, "Tìm kiếm theo tên sách hoặc tác giả...", "flutter")
 
     # Wait
     page.locator('flt-semantics[role="group"][aria-label*="Mã: BOOK"]').first.wait_for(timeout=10000)
 
-    # Assert — phải tìm thấy sách Flutter dù nhập chữ thường
+    # Assert
     results = page.locator('flt-semantics[aria-label*="Flutter"]')
     assert results.count() > 0, "Bug: search bar is case-sensitive — lowercase input returned no results"
 
