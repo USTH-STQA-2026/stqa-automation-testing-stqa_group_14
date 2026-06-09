@@ -177,11 +177,12 @@ def test_category_bar_case_insensitive(page, test_config):
     flutter_fill(page, "Lọc theo thể loại (VD: Công nghệ, Kinh tế...)", "công nghệ")
 
     # Wait
-    page.wait_for_timeout(3000)
+    page.wait_for_timeout(2000)
 
-    # Assert
-    books = page.locator('flt-semantics[role="group"][aria-label*="Mã: BOOK"]')
-    assert books.count() > 0, "Bug confirmed: category bar is case-sensitive — lowercase input returned no results"
-
-    # Screenshot
-    page.screenshot(path=f"{test_config['screenshot_dir']}/tc09_category_case_insensitive.png")
+    try:
+        # Assert
+        books = page.locator('flt-semantics[role="group"][aria-label*="Mã: BOOK"]')
+        assert books.count() > 0, "Bug confirmed: category bar is case-sensitive — lowercase input returned no results"
+    finally:
+        # Screenshot
+        page.screenshot(path=f"{test_config['screenshot_dir']}/tc09_category_case_insensitive.png")
