@@ -21,7 +21,7 @@ import time
 import pytest
 from conftest import (
     enable_flutter_semantics, flutter_fill, flutter_click_button,
-    login, wait_for_flutter, SCREENSHOT_DIR,
+    login, wait_for_flutter,
 )
 from datetime import datetime, timedelta
 from playwright.sync_api import expect
@@ -80,9 +80,7 @@ def test_borrow_book(page, test_config):
     # 2. Borrow the book BOOK001
 
     # screenshots of program state before borrowing
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-08_Book-before.png"))
     page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]').first.click()
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-08_BR-before.png"))
     page.locator('flt-semantics[role="tab"][aria-label="Sách"]').first.click()
 
     book_name = "BOOK001"
@@ -91,9 +89,7 @@ def test_borrow_book(page, test_config):
 
     # 3. Wait for result
     wait_for_flutter(page, text="thành công")
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-08_Book-status-after.png"))
     page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]').first.click()
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-08_BR-after.png"))
 
     # 4. Check result (oracle)
 
@@ -136,7 +132,6 @@ def test_borrow_book(page, test_config):
     # sleep 5 seconds to wait for the toast message to go away
     # only for a prettier screenshot
     time.sleep(5)
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-08_BR-after.png"))
 
     assert due_date.date() == (borrow_date + timedelta(days=14)).date(), (
         f"Expected due date {(borrow_date + timedelta(days=14)).date()}, got {due_date.date()}"
@@ -166,7 +161,6 @@ def test_view_borrowed_books(page, test_config):
 
     # 3. Check for borrowed books
     record = page.locator('flt-semantics[role="group"][aria-label*="Đang mượn"]').first
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-09_BR.png"))
     expect(record, "No borrow record BR001: expect BR001").to_be_visible()
 
 def test_return_book(page, test_config):
@@ -192,9 +186,7 @@ def test_return_book(page, test_config):
 
     # 2. Switch to record tab
     # screenshots of program state before returning
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-10_Book-before.png"))
     page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]').first.click()
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-10_BR-before.png"))
 
     # 3. Return BR001 (Kiểm thử phần mềm nhập môn)
 
@@ -203,7 +195,6 @@ def test_return_book(page, test_config):
 
     flutter_click_button(page, text="Trả sách")
     wait_for_flutter(page, text="thành công")
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-10_BR-after.png"))
     
     # check if borrow record status has changed to "Đã trả"
     borrowed_book = page.locator('flt-semantics').filter(has_text=BOOK_NAME).filter(has_text="Đã trả").first
@@ -211,7 +202,6 @@ def test_return_book(page, test_config):
 
     # 4. Go back to see book status changed
     page.locator('flt-semantics[role="tab"][aria-label="Sách"]').first.click()
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-10_Book-after.png"))
     book_stat = page.locator(f'flt-semantics[role="group"][aria-label*="{BOOK_NAME}"][aria-label*="Có sẵn"]')
     expect(book_stat, "BOOK003's status stayed at Borrowed: expect change to Available").to_be_visible()
 
@@ -238,16 +228,13 @@ def test_borrow_exceed(page, test_config):
     enable_flutter_semantics(page)
 
     # screenshots of program state before borrowing
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-04-13_Book-before.png"))
     page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]').first.click()
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-04-13_BR-before.png"))
     page.locator('flt-semantics[role="tab"][aria-label="Sách"]').first.click()
 
     # 2. Borrow BOOK001, BOOK002, BOOK005
     book_list = ["BOOK001", "BOOK002", "BOOK005"]
     for i in range(3):
         borrow(page, test_config, book_list[i])
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-04-13_Book-after.png"))
 
     # 3. Check result (oracle)
     # 3.1 Expect refusal
@@ -260,7 +247,6 @@ def test_borrow_exceed(page, test_config):
 
     # 3.3 Expect no borrow record for BOOK005
     page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]').first.click()
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-04-13_BR-after.png"))
     record = page.locator('flt-semantics[role="group"][aria-label*="Trí tuệ nhân tạo đại cương"][aria-label*="Đang mượn"]').first
     expect(record, "Borrow record was created for BOOK005: expect no creation").not_to_be_visible()
 
@@ -284,16 +270,13 @@ def test_suspended_borrow(page, test_config):
     enable_flutter_semantics(page)
 
     # screenshots of program state before borrowing
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-04-11_Book-before.png"))
     page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]').first.click()
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-04-11_BR-before.png"))
     page.locator('flt-semantics[role="tab"][aria-label="Sách"]').first.click()
 
     # 2. Borrow the book BOOK001
     book_name = "BOOK001"
     borrow(page, test_config, book_name)
 
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-04-11_Book-after.png"))
 
     # 3. Check result (oracle)
 
@@ -308,7 +291,6 @@ def test_suspended_borrow(page, test_config):
 
     # 3.3 No borrow record is created for the book
     page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]').first.click()
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-04-11_BR-after.png"))
     record = page.locator('flt-semantics[role="group"][aria-label*="Lập trình Flutter cơ bản"][aria-label*="Đang mượn"]').first
     expect(record, "Borrow record created for BOOK001: expect no creation").not_to_be_visible()
 
@@ -332,16 +314,13 @@ def test_expired_borrow(page, test_config):
     enable_flutter_semantics(page)
 
     # screenshots of program state before borrowing
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-04-12_Book-before.png"))
     page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]').first.click()
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-04-12_BR-before.png"))
     page.locator('flt-semantics[role="tab"][aria-label="Sách"]').first.click()
 
     # 2. Borrow the book BOOK001
     book_name = "BOOK001"
     borrow(page, test_config, book_name)
 
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-04-12_Book-after.png"))
 
     # 3. Check result (oracle)
 
@@ -356,7 +335,6 @@ def test_expired_borrow(page, test_config):
 
     # 3.3 No borrow record is created for the book
     page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]').first.click()
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-04-11_BR-after.png"))
     record = page.locator('flt-semantics[role="group"][aria-label*="Lập trình Flutter cơ bản"][aria-label*="Đang mượn"]').first
     expect(record, "Borrow record created for BOOK001: expect no creation").not_to_be_visible()
 

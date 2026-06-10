@@ -14,12 +14,11 @@ Hints (*Gợi ý*):
     - Use login() helper from conftest.py to log in before testing
       (*Dùng login() helper từ conftest.py để đăng nhập trước khi test*)
 """
-import os
 import time
 import pytest
 from conftest import (
     enable_flutter_semantics, flutter_fill, flutter_click_button,
-    login, SCREENSHOT_DIR,
+    login,
 )
 
 
@@ -49,8 +48,6 @@ def test_search_book_by_name(page, test_config):
     results = page.locator('flt-semantics[aria-label*="Flutter"]')
     assert results.count() > 0, "No books containing 'Flutter' were found"
     
-    # Screenshot
-    page.screenshot(path=f"{test_config['screenshot_dir']}/tc04_search_by_name.png")
 
 
 def test_search_book_no_result(page, test_config):
@@ -77,8 +74,6 @@ def test_search_book_no_result(page, test_config):
     books = page.locator('flt-semantics[role="group"][aria-label*="Mã: BOOK"]')
     assert books.count() == 0, f"Expected no results but found {books.count()} book(s)"
 
-    # Screenshot
-    page.screenshot(path=f"{test_config['screenshot_dir']}/tc05_search_no_result.png")
 
 
 def test_filter_by_category(page, test_config):
@@ -113,8 +108,6 @@ def test_filter_by_category(page, test_config):
         label = books.nth(i).get_attribute("aria-label") or ""
         assert "Công nghệ" in label, f"Book {i+1} does not belong to 'Công nghệ': {label}"
 
-    # Screenshot
-    page.screenshot(path=f"{test_config['screenshot_dir']}/tc06_filter_by_category.png")
 
 
 def test_search_by_author(page, test_config):
@@ -141,8 +134,6 @@ def test_search_by_author(page, test_config):
     results = page.locator('flt-semantics[aria-label*="Nguyễn Minh Đức"]')
     assert results.count() > 0, "No books found for author 'Nguyễn Minh Đức'"
     
-    # Screenshot
-    page.screenshot(path=f"{test_config['screenshot_dir']}/tc07_search_by_author.png")
 
 
 def test_search_bar_case_insensitive(page, test_config):
@@ -162,8 +153,6 @@ def test_search_bar_case_insensitive(page, test_config):
     results = page.locator('flt-semantics[aria-label*="Flutter"]')
     assert results.count() > 0, "Bug: search bar is case-sensitive — lowercase input returned no results"
 
-    # Screenshot
-    page.screenshot(path=f"{test_config['screenshot_dir']}/tc08_search_case_insensitive.png")
 
 
 def test_category_bar_case_insensitive(page, test_config):
@@ -179,10 +168,5 @@ def test_category_bar_case_insensitive(page, test_config):
     # Wait
     page.wait_for_timeout(2000)
 
-    try:
-        # Assert
-        books = page.locator('flt-semantics[role="group"][aria-label*="Mã: BOOK"]')
-        assert books.count() > 0, "Bug confirmed: category bar is case-sensitive — lowercase input returned no results"
-    finally:
-        # Screenshot
-        page.screenshot(path=f"{test_config['screenshot_dir']}/tc09_category_case_insensitive.png")
+    books = page.locator('flt-semantics[role="group"][aria-label*="Mã: BOOK"]')
+    assert books.count() > 0, "Bug confirmed: category bar is case-sensitive — lowercase input returned no results"

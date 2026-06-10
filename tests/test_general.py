@@ -15,7 +15,6 @@ Hints (*Gợi ý*):
     - After switching to EN: text "Logout", "Borrow", "Search", "Library" may appear
       (*Sau chuyển EN: text tiếng Anh có thể xuất hiện*)
 """
-import os
 import time
 import pytest
 from conftest import (
@@ -43,7 +42,6 @@ def test_logout(page, test_config):
     wait_for_flutter(page, text="Đăng nhập")
     enable_flutter_semantics(page)
 
-    page.screenshot(path=os.path.join(test_config["screenshot_dir"], "logout.png"))
     sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
     assert "Đăng nhập" in sem_text or "Email" in sem_text, (
         "Logout failed: the login screen was not displayed after clicking Đăng xuất."
@@ -69,7 +67,6 @@ def test_switch_language_to_english(page, test_config):
     wait_for_flutter(page, text="Logout")
     enable_flutter_semantics(page)
 
-    page.screenshot(path=os.path.join(test_config["screenshot_dir"], "switch_language_to_english.png"))
     sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
     assert any(word in sem_text for word in ["Logout", "Borrow", "Search", "Library"]), (
         "Language switch failed: English UI text was not found after clicking EN."
