@@ -28,9 +28,12 @@ from playwright.sync_api import expect
 import re
 import time
 
-# Helper function: borrow a book book_name at the Books tab
-# Note that it also works with book codes
 def borrow(page, test_config, book_name):
+    """Helper function: borrow a book book_name
+    Precondition: must be at the Books tab already
+
+    Works with both book name and book code
+    """
     # find the string book_name in aria-label
     available_book = page.locator(f'flt-semantics[role="group"][aria-label*="{book_name}"][aria-label*="Có sẵn"]').first
 
@@ -131,6 +134,7 @@ def test_borrow_book(page, test_config):
     due_date = datetime.strptime(due_match.group(1), "%d/%m/%Y")
 
     # sleep 5 seconds to wait for the toast message to go away
+    # only for a prettier screenshot
     time.sleep(5)
     page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-08_BR-after.png"))
 
@@ -218,6 +222,14 @@ def test_return_book(page, test_config):
 def test_borrow_exceed(page, test_config):
     """
     TC-04-13: An active member whose borrow count is 3 borrows a book
+
+    Steps:
+        1. Login with the account of MEM002
+        2. Borrow BOOK001, BOOK002, BOOK005
+        3. Check result (oracle)
+            3.1 Expect refusal: do not accept the request
+            3.2 Expect BOOK005 is still available
+            3.3 Expect no borrow record for BOOK005
     """
     # 1. Login with the account of MEM002
     page.goto(test_config["base_url"], wait_until="load", timeout=60000)
@@ -255,6 +267,14 @@ def test_borrow_exceed(page, test_config):
 def test_suspended_borrow(page, test_config):
     """
     TC-04-11: A suspended member whose borrow count is less than 3 borrows an available book
+
+    Steps:
+        1. Login with the account of MEM004
+        2. Borrow the book BOOK001
+        3. Check result (oracle)
+            3.1 Error message must mention the member being suspended
+            3.2 Book is still available
+            3.3 No borrow record is created for the book
     """
     
     # 1. Login with the account of MEM004
@@ -269,7 +289,7 @@ def test_suspended_borrow(page, test_config):
     page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-04-11_BR-before.png"))
     page.locator('flt-semantics[role="tab"][aria-label="Sách"]').first.click()
 
-    # 3. Borrow the book BOOK001
+    # 2. Borrow the book BOOK001
     book_name = "BOOK001"
     borrow(page, test_config, book_name)
 
@@ -295,6 +315,14 @@ def test_suspended_borrow(page, test_config):
 def test_expired_borrow(page, test_config):
     """
     TC-04-12: An expired member whose borrow count is less than 3 borrows an available book
+
+    Steps:
+        1. Login with the account of MEM005
+        2. Borrow the book BOOK001
+        3. Check result (oracle)
+            3.1 Error message must mention the member being expired
+            3.2 Book is still available
+            3.3 No borrow record is created for the book
     """
 
     # 1. Login with the account of MEM005
@@ -309,7 +337,7 @@ def test_expired_borrow(page, test_config):
     page.screenshot(path=os.path.join(SCREENSHOT_DIR, "TC-04-12_BR-before.png"))
     page.locator('flt-semantics[role="tab"][aria-label="Sách"]').first.click()
 
-    # 3. Borrow the book BOOK001
+    # 2. Borrow the book BOOK001
     book_name = "BOOK001"
     borrow(page, test_config, book_name)
 
