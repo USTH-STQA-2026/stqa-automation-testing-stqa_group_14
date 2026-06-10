@@ -158,6 +158,4 @@ The current automated test suite covers all 12 required assignment test cases an
 
 Overall, the suite uses reasonably strong oracles because it checks concrete UI text, business states, record visibility, and date calculations. Future improvements should include replacing static waits with smart waits, adding direct tests for REQ-07 Member Management, and converting suitable login/search scenarios to `pytest.mark.parametrize` for clearer data-driven coverage.
 
-## 11. AI Usage Declaration
 
-The team used AI/Codex to support requirement review, screenshot mechanism cleanup, and report drafting. The test descriptions and quality notes in this report were reviewed against the SRS, BRD, test account documentation, and the current test files in this repository.
