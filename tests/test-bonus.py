@@ -25,19 +25,6 @@ RETURNED_STATUS = "Đã trả"
 BORROWING_STATUS = "Đang mượn"
 OVERDUE_TEXT = "Quá hạn"
 CHECK_OVERDUE_TEXTS = ("Kiểm tra quá hạn", "Check Overdue")
-SCREENSHOT_DIR = os.path.join(os.path.dirname(__file__), "screenshots")
-os.makedirs(SCREENSHOT_DIR, exist_ok=True)
-
-TC_05_05_BUG_SCREENSHOT = os.path.join(
-    SCREENSHOT_DIR,
-    "tc_05_05_bug_access_control.png",
-)
-TC_05_04_BUG_SCREENSHOT = os.path.join(
-    SCREENSHOT_DIR,
-    "tc_05_04_bug_duplicate_return.png",
-)
-TC_06_05_PASS_SCREENSHOT = os.path.join(SCREENSHOT_DIR, "tc_06_05_pass.png")
-
 
 def _require_env(*names):
     missing = [name for name in names if not os.getenv(name)]
@@ -135,11 +122,6 @@ def _all_semantics_text(page):
     return " ".join(text_parts + aria_parts)
 
 
-def _capture_evidence(page, path):
-    enable_flutter_semantics(page)
-    page.screenshot(path=path, full_page=True)
-
-
 def test_tc_05_05_member_cannot_return_another_members_borrowed_book(page, test_config):
     """TC-05-05: Member cannot view or return another member's borrow record."""
     other_email, other_password = _require_env(
@@ -166,11 +148,6 @@ def test_tc_05_05_member_cannot_return_another_members_borrowed_book(page, test_
         owner = _extract_member_name(record_text)
         if owner and current_member and owner != current_member:
             foreign_records.append(record_text)
-
-    # Improvement note: access-control tests would be stronger if the app exposed
-    # stable data-testid attributes for borrow records and owner IDs.
-    if foreign_records:
-        _capture_evidence(page, TC_05_05_BUG_SCREENSHOT)
 
     assert not foreign_records, (
         "A normal member can see borrow record(s) owned by another member. "
@@ -221,10 +198,6 @@ def test_tc_05_04_cannot_return_book_that_is_already_returned(page, test_config)
     )
 
     direct_return_buttons = _direct_actionable_return_buttons_inside(returned_record)
-    if direct_return_buttons.count() > 0:
-        returned_record.scroll_into_view_if_needed(timeout=3000)
-        _capture_evidence(page, TC_05_04_BUG_SCREENSHOT)
-
     assert direct_return_buttons.count() == 0, (
         "Returned record exposes a direct actionable return control. "
         f"Record text: {returned_text}"
@@ -241,16 +214,19 @@ def test_tc_06_05_member_cannot_use_check_overdue_function(page, test_config):
     before_text = _all_semantics_text(page)
     before_overdue_count = before_text.count(OVERDUE_TEXT) + before_text.count("Overdue")
 
+    visible_overdue_buttons = []
     for button_text in CHECK_OVERDUE_TEXTS:
         button = page.locator(f'flt-semantics[role="button"]:has-text("{button_text}")')
-        assert button.count() == 0, (
-            f"Normal member must not see or use the '{button_text}' function"
-        )
+        if button.count() > 0:
+            visible_overdue_buttons.append(button_text)
 
     after_text = _all_semantics_text(page)
     after_overdue_count = after_text.count(OVERDUE_TEXT) + after_text.count("Overdue")
+
+    assert not visible_overdue_buttons, (
+        "Normal member must not see or use overdue checking function(s): "
+        f"{', '.join(visible_overdue_buttons)}"
+    )
     assert after_overdue_count == before_overdue_count, (
         "Normal member session changed overdue markers without permission"
     )
-
-    _capture_evidence(page, TC_06_05_PASS_SCREENSHOT)

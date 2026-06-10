@@ -1,7 +1,6 @@
 
-import os
 import pytest
-from conftest import enable_flutter_semantics, flutter_fill, flutter_click_button, wait_for_flutter, SCREENSHOT_DIR
+from conftest import enable_flutter_semantics, flutter_fill, flutter_click_button, wait_for_flutter
 
 
 def test_login_success(page, test_config):
@@ -14,7 +13,6 @@ def test_login_success(page, test_config):
     flutter_click_button(page, "Đăng nhập")
 
     wait_for_flutter(page, text="Đăng xuất")
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "login_success.png"))
 
    
     sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
@@ -38,7 +36,6 @@ def test_login_fail_wrong_password(page, test_config):
 
     # [P] Propagation: chờ hệ thống phản hồi
     page.wait_for_timeout(2000)
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "login_fail_wrong_password.png"))
 
     # [R✓] Revealability: vẫn ở trang login, KHÔNG thấy nút Đăng xuất
     sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
@@ -57,7 +54,6 @@ def test_login_fail_empty_fields(page, test_config):
 
     # [P] Propagation
     page.wait_for_timeout(2000)
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "login_fail_empty.png"))
 
     # [R✓] Revealability: vẫn ở trang login
     sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
@@ -76,7 +72,6 @@ def test_login_success_member(page, test_config):
 
     # [P] Propagation
     wait_for_flutter(page, text="Đăng xuất")
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "login_success_member.png"))
 
     # [R✓] Revealability: kiểm tra đăng nhập thành công
     sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
@@ -96,7 +91,6 @@ def test_login_fail_nonexistent_email(page, test_config):
 
     # [P] Propagation
     page.wait_for_timeout(2000)
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "login_fail_nonexistent_email.png"))
 
     # [R✓] Revealability: vẫn ở trang login, KHÔNG thấy nút Đăng xuất
     sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
