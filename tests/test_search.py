@@ -14,19 +14,16 @@ Hints (*Gợi ý*):
     - Use login() helper from conftest.py to log in before testing
       (*Dùng login() helper từ conftest.py để đăng nhập trước khi test*)
 """
-import os
 import time
 import pytest
 from conftest import (
     enable_flutter_semantics, flutter_fill, flutter_click_button,
-    login, SCREENSHOT_DIR,
+    login,
 )
 
 
 def test_search_book_by_name(page, test_config):
     """TC-04: Search book by name – results found (*Tìm kiếm sách theo tên — tìm thấy kết quả*)
-
-    🔴 NOT COMPLETED (*CHƯA HOÀN THÀNH*)
 
     Description (*Mô tả*):
         Log in → search keyword "Flutter" → verify Flutter books appear in results.
@@ -37,14 +34,24 @@ def test_search_book_by_name(page, test_config):
         - flutter_fill(page, "Tìm kiếm theo tên sách hoặc tác giả...", "Flutter")
         - Verify: page.locator('flt-semantics[aria-label*="Flutter"]').count() > 0
     """
-    # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    
+    # Arrange
+    login(page, test_config)
+
+    # Act
+    flutter_fill(page, "Tìm kiếm theo tên sách hoặc tác giả...", "Flutter")
+
+    # Wait
+    page.locator('flt-semantics[role="group"][aria-label*="Mã: BOOK"]').first.wait_for(timeout=10000)
+
+    # Assert
+    results = page.locator('flt-semantics[aria-label*="Flutter"]')
+    assert results.count() > 0, "No books containing 'Flutter' were found"
+    
 
 
 def test_search_book_no_result(page, test_config):
     """TC-05: Search book – no results (*Tìm kiếm sách — không có kết quả*)
-
-    🔴 NOT COMPLETED (*CHƯA HOÀN THÀNH*)
 
     Description (*Mô tả*):
         Log in → search a non-existent keyword (e.g. "xyz_khong_ton_tai_12345")
@@ -54,14 +61,23 @@ def test_search_book_no_result(page, test_config):
     Hints (*Gợi ý*):
         - Verify: page.locator('flt-semantics[role="group"][aria-label*="Mã: BOOK"]').count() == 0
     """
-    # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    # Arrange
+    login(page, test_config)
+
+    # Act
+    flutter_fill(page, "Tìm kiếm theo tên sách hoặc tác giả...", "abcxyz999")
+
+    # Wait
+    page.wait_for_timeout(2000)
+
+    # Assert
+    books = page.locator('flt-semantics[role="group"][aria-label*="Mã: BOOK"]')
+    assert books.count() == 0, f"Expected no results but found {books.count()} book(s)"
+
 
 
 def test_filter_by_category(page, test_config):
     """TC-06: Filter books by category 'Công nghệ' (*Lọc sách theo thể loại 'Công nghệ'*)
-
-    🔴 NOT COMPLETED (*CHƯA HOÀN THÀNH*)
 
     Description (*Mô tả*):
         Log in → enter "Công nghệ" in the category filter → verify all displayed books
@@ -76,14 +92,26 @@ def test_filter_by_category(page, test_config):
         - Loop through each book, verify aria-label contains "Công nghệ"
           (*Lặp qua từng sách, kiểm tra aria-label chứa "Công nghệ"*)
     """
-    # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    # Arrange
+    login(page, test_config)
+
+    # Act
+    flutter_fill(page, "Lọc theo thể loại (VD: Công nghệ, Kinh tế...)", "Công nghệ")
+    
+    # Wait
+    page.locator('flt-semantics[role="group"][aria-label*="Mã: BOOK"]').first.wait_for(timeout=10000)
+
+    # Assert
+    books = page.locator('flt-semantics[role="group"][aria-label*="Mã: BOOK"]')
+    assert books.count() > 0, "No books displayed after applying category filter"
+    for i in range(books.count()):
+        label = books.nth(i).get_attribute("aria-label") or ""
+        assert "Công nghệ" in label, f"Book {i+1} does not belong to 'Công nghệ': {label}"
+
 
 
 def test_search_by_author(page, test_config):
     """TC-07: Search book by author name (*Tìm kiếm sách theo tên tác giả*)
-
-    🔴 NOT COMPLETED (*CHƯA HOÀN THÀNH*)
 
     Description (*Mô tả*):
         Log in → search author name (e.g. "Nguyễn Minh Đức") → verify results found.
@@ -93,5 +121,52 @@ def test_search_by_author(page, test_config):
         - flutter_fill(page, "Tìm kiếm theo tên sách hoặc tác giả...", "Nguyễn Minh Đức")
         - Verify: page.locator('flt-semantics[aria-label*="Nguyễn Minh Đức"]').count() > 0
     """
-    # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    # Arrange
+    login(page, test_config)
+
+    # Act
+    flutter_fill(page, "Tìm kiếm theo tên sách hoặc tác giả...", "Nguyễn Minh Đức")
+
+    # Wait
+    page.locator('flt-semantics[role="group"][aria-label*="Mã: BOOK"]').first.wait_for(timeout=10000)
+
+    # Assert
+    results = page.locator('flt-semantics[aria-label*="Nguyễn Minh Đức"]')
+    assert results.count() > 0, "No books found for author 'Nguyễn Minh Đức'"
+    
+
+
+def test_search_bar_case_insensitive(page, test_config):
+    """TC-08: Search bar - case-insensitive (chữ thường/hoa)
+
+    """
+    # Arrange
+    login(page, test_config)
+
+    # Act
+    flutter_fill(page, "Tìm kiếm theo tên sách hoặc tác giả...", "flutter")
+
+    # Wait
+    page.locator('flt-semantics[role="group"][aria-label*="Mã: BOOK"]').first.wait_for(timeout=10000)
+
+    # Assert
+    results = page.locator('flt-semantics[aria-label*="Flutter"]')
+    assert results.count() > 0, "Bug: search bar is case-sensitive — lowercase input returned no results"
+
+
+
+def test_category_bar_case_insensitive(page, test_config):
+    """TC-09: Category bar - case-insensitive (chữ thường/hoa)
+    
+    """
+    # Arrange
+    login(page, test_config)
+
+    # Act
+    flutter_fill(page, "Lọc theo thể loại (VD: Công nghệ, Kinh tế...)", "công nghệ")
+
+    # Wait
+    page.wait_for_timeout(2000)
+
+    books = page.locator('flt-semantics[role="group"][aria-label*="Mã: BOOK"]')
+    assert books.count() > 0, "Bug confirmed: category bar is case-sensitive — lowercase input returned no results"

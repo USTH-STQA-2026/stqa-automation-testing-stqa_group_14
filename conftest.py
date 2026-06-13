@@ -11,7 +11,38 @@ TEST_EMAIL = os.getenv("TEST_EMAIL", "")
 TEST_PASSWORD = os.getenv("TEST_PASSWORD", "")
 TEST_DISPLAY_NAME = os.getenv("TEST_DISPLAY_NAME", "")
 SCREENSHOT_DIR = os.path.join(os.path.dirname(__file__), "screenshots")
+PASS_SCREENSHOT_DIR = os.path.join(SCREENSHOT_DIR, "pass")
+BUG_SCREENSHOT_DIR = os.path.join(SCREENSHOT_DIR, "bug")
 os.makedirs(SCREENSHOT_DIR, exist_ok=True)
+os.makedirs(PASS_SCREENSHOT_DIR, exist_ok=True)
+os.makedirs(BUG_SCREENSHOT_DIR, exist_ok=True)
+
+
+def _safe_screenshot_name(nodeid):
+    name = nodeid.replace("\\", "_").replace("/", "_").replace("::", "__")
+    return "".join(char if char.isalnum() or char in "._-" else "_" for char in name)
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    setattr(item, f"rep_{call.when}", outcome.get_result())
+
+
+@pytest.fixture(autouse=True)
+def capture_test_evidence(request, page):
+    yield
+    report = getattr(request.node, "rep_call", None)
+    if report is None:
+        return
+
+    result_dir = PASS_SCREENSHOT_DIR if report.passed else BUG_SCREENSHOT_DIR
+    screenshot_name = f"{_safe_screenshot_name(request.node.nodeid)}.png"
+    screenshot_path = os.path.join(result_dir, screenshot_name)
+    try:
+        page.screenshot(path=screenshot_path, full_page=True)
+    except Exception as exc:
+        print(f"\n[screenshot] Could not capture {screenshot_path}: {exc}")
 
 
 # ---------------------------------------------------------------------------
