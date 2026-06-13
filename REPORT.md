@@ -1,37 +1,206 @@
-# REPORT - STQA Library Automation Testing
+# Software Testing Project Report
 
-## 1. General Information
+## Automation Testing Framework for Flutter Web CanvasKit Library Book Borrowing System
 
-| Item | Details |
+## 1. Executive Summary
+
+This project presents a completed automation testing framework for the Library Book Borrowing System hosted at `https://stqa.rbc.vn`. The system supports digital library operations such as member authentication, book search, borrowing, returning, overdue handling, member administration, and bilingual user interaction.
+
+The automation framework was developed using Python, Pytest, Playwright, and Flutter Accessibility Semantics. It performs end-to-end browser-based testing against a Flutter Web CanvasKit application. Since CanvasKit renders the visual interface primarily through a canvas instead of standard HTML elements, the framework uses the Flutter Accessibility Semantics Tree to locate and interact with application controls.
+
+The project demonstrates a practical software testing solution for a modern web application whose interface cannot be automated reliably through ordinary DOM selectors alone. The test suite validates core business workflows, extended role-based scenarios, and evidence collection through automated screenshots and structured test execution.
+
+## 2. Introduction
+
+Software testing is a key activity in verifying that a system satisfies functional requirements and supports expected user workflows. In this project, automated UI testing is applied to a Library Book Borrowing System used for Software Testing and Quality Assurance coursework.
+
+The tested application is implemented with Flutter Web using the CanvasKit renderer. This introduces a specific automation challenge: most visible UI elements are drawn on a canvas, so they are not exposed as ordinary HTML buttons, inputs, or tables. To address this, the framework enables and uses Flutter Accessibility Semantics, which creates semantic nodes such as `flt-semantics`, ARIA labels, roles, text fields, buttons, tabs, and groups.
+
+The result is a reusable automation framework that allows testers to execute consistent end-to-end validation of the system from the perspective of real users.
+
+## 3. Project Objectives
+
+The project was created with the following objectives:
+
+| Objective | Description |
 |---|---|
-| System under test | Library Book Borrowing System - https://stqa.rbc.vn |
-| Course | Software Testing & Quality Assurance |
-| Team | Group 14 |
-| Tools | Python, pytest, Playwright |
-| Application technology | Flutter Web CanvasKit |
-| Main requirement source | `docs/SRS-library-system.md` |
-| Business context source | `docs/BRD-yeu-cau-nghiep-vu.md` |
-| Test data source | `docs/test-accounts.md` and SRS seed data |
+| Automate functional UI testing | Execute browser-based tests for major user workflows without manual repetition. |
+| Validate business requirements | Confirm that library operations follow the SRS and BRD expectations. |
+| Support multiple user roles | Test both member and librarian workflows. |
+| Adapt automation to Flutter Web CanvasKit | Use Accessibility Semantics Tree interaction for a canvas-rendered interface. |
+| Provide reusable test infrastructure | Centralize login, browser setup, waiting logic, screenshots, and UI helpers. |
+| Collect test evidence | Capture screenshots and console output to support evaluation and demonstration. |
+| Demonstrate academic testing practice | Present a complete testing deliverable suitable for lecturer and project evaluation. |
 
-This report summarizes the current automated test suite in the `tests/` directory and maps it to the assignment requirements and the SRS. Since the application is built with Flutter Web CanvasKit, the tests interact mainly through the Accessibility Semantics Tree (`flt-semantics`) instead of normal HTML DOM elements.
+## 4. System Under Test
 
-## 2. Test Scope
+The System Under Test is the Library Book Borrowing System deployed at:
 
-The current test suite covers the following functional areas:
+```text
+https://stqa.rbc.vn
+```
 
-| Functional area | Related SRS requirements | Test file |
-|---|---|---|
-| Login | REQ-01 | `tests/test_login.py` |
-| Book search and filtering | REQ-03 | `tests/test_search.py` |
-| Borrow book | REQ-04 | `tests/test_borrow_return.py` |
-| Return book | REQ-05 | `tests/test_borrow_return.py`, `tests/test-bonus.py` |
-| Overdue handling and authorization | REQ-06, REQ-08 | `tests/test-bonus.py` |
-| Borrow record lookup | REQ-08 | `tests/test_borrow_return.py`, `tests/test-bonus.py` |
-| Logout and language switching | Bilingual UI and general functions | `tests/test_general.py` |
+The system provides a web-based interface for managing a small library operation.
 
-In addition to the 12 required test cases, the suite includes extended tests for case-insensitive search/filter behavior, borrow limits, member status restrictions, borrow-record authorization, and access to the overdue-checking function.
+| User Role | Main Capabilities |
+|---|---|
+| Member | Log in, view books, search books, filter by category, borrow eligible books, return personal borrowed books, and view borrow records. |
+| Librarian | Log in, view books, manage members, review borrowing records, and perform administrative workflows. |
 
-## 3. Environment and Execution
+The system supports Vietnamese and English interfaces, enabling bilingual workflow validation.
+
+## 5. Testing Scope
+
+The testing scope focuses on end-to-end functional UI automation.
+
+| Area | Scope Included |
+|---|---|
+| Authentication | Valid login, invalid login, missing credentials, librarian login, logout. |
+| Book catalog | Book visibility, title search, author search, category filtering. |
+| Borrow workflow | Borrowing available books, confirmation dialog interaction, borrow record creation, due-date validation. |
+| Return workflow | Returning borrowed books, returned status verification, book availability update. |
+| Member eligibility | Borrowing behavior for active, suspended, expired, and limit-reached member states. |
+| Member management | Librarian member creation, email validation, duplicate email handling. |
+| Borrow records | Personal records, lookup behavior, ownership-based interaction. |
+| Overdue handling | Due-date boundary and overdue return workflows. |
+| Bilingual UI | Switching the interface from Vietnamese to English. |
+| Evidence collection | Automatic screenshot capture for completed test outcomes. |
+
+The scope is centered on automated functional validation and does not include source code review or code quality evaluation.
+
+## 6. Testing Strategy
+
+The project uses an end-to-end black-box UI testing strategy. Tests interact with the deployed web application through a browser in the same way a user would interact with it.
+
+The strategy consists of:
+
+| Strategy Element | Implementation |
+|---|---|
+| Test runner | Pytest discovers and executes test functions. |
+| Browser automation | Playwright controls Chromium. |
+| UI interaction | Flutter Accessibility Semantics Tree is used for fields, buttons, tabs, and records. |
+| Test isolation | Each test receives a fresh browser context. |
+| Test data | Seed data and configurable accounts are used through `.env`. |
+| Assertions | Tests verify visible text, ARIA labels, statuses, records, and access behavior. |
+| Evidence | Screenshots are captured automatically after test execution. |
+
+The strategy is designed to make tests repeatable, readable, and aligned with user-facing requirements.
+
+## 7. Automation Framework Architecture
+
+The automation framework is organized around Pytest fixtures, Playwright browser control, and Flutter-specific helper functions.
+
+```text
++-----------------------------+
+|        Pytest Test Suite     |
++-------------+---------------+
+              |
+              v
++-----------------------------+
+|       Shared Fixtures        |
+|  browser, page, test_config  |
++-------------+---------------+
+              |
+              v
++-----------------------------+
+|       Playwright Driver      |
++-------------+---------------+
+              |
+              v
++-----------------------------+
+|       Chromium Browser       |
++-------------+---------------+
+              |
+              v
++-----------------------------+
+| Flutter Web CanvasKit App    |
++-------------+---------------+
+              |
+              v
++-----------------------------+
+| Accessibility Semantics Tree |
+| flt-semantics, aria-labels   |
++-----------------------------+
+```
+
+The framework does not depend on conventional DOM structure for the Flutter interface. Instead, it enables semantics and then uses semantic locators to perform actions and validations.
+
+## 8. Technology Stack
+
+| Layer | Technology |
+|---|---|
+| Programming language | Python |
+| Test runner | Pytest |
+| Browser automation | Playwright |
+| Browser engine | Chromium |
+| Configuration loading | python-dotenv |
+| Application renderer | Flutter Web CanvasKit |
+| Interaction layer | Flutter Accessibility Semantics Tree |
+| Documentation | Markdown |
+
+Project dependencies are managed in `requirements.txt`:
+
+```text
+playwright==1.49.1
+pytest==8.3.4
+pytest-playwright==0.6.2
+python-dotenv==1.1.0
+```
+
+## 9. Framework Components and Responsibilities
+
+| Component | Responsibility |
+|---|---|
+| `tests/test_login.py` | Authentication scenarios for member and librarian accounts. |
+| `tests/test_search.py` | Book search, author search, category filtering, and case-insensitive behavior. |
+| `tests/test_borrow_return.py` | Borrowing, borrow records, returning, borrow limits, and member eligibility workflows. |
+| `tests/test_general.py` | Logout and language switching workflows. |
+| `tests/test_bonus.py` | Extended scenarios for overdue handling, member management, role access, and ownership behavior. |
+| `conftest.py` | Shared fixtures, browser setup, environment loading, Flutter helpers, login utilities, waits, and screenshots. |
+| `web_detector.py` | Web technology detection and technology-aware interaction support. |
+| `.env` / `.env.example` | Runtime configuration for target URL and test accounts. |
+| `screenshots/` | Stores visual evidence from test execution. |
+| `docs/` | Stores SRS, BRD, assignment guide, test accounts, and supporting documentation. |
+| `pytest.ini` | Defines Pytest discovery path and default execution options. |
+
+The framework centralizes repeated operations in helper functions so that individual test cases remain focused on business behavior.
+
+## 10. Test Execution Workflow
+
+The typical execution process is:
+
+```text
+1. Install dependencies
+        |
+        v
+2. Install Playwright Chromium
+        |
+        v
+3. Configure .env test accounts
+        |
+        v
+4. Run pytest
+        |
+        v
+5. Launch Chromium with accessibility support
+        |
+        v
+6. Open application URL
+        |
+        v
+7. Enable Flutter Semantics Tree
+        |
+        v
+8. Execute test workflow
+        |
+        v
+9. Perform assertions
+        |
+        v
+10. Capture screenshot evidence
+```
+
+Common execution commands:
 
 ```bash
 pip install -r requirements.txt
@@ -39,123 +208,155 @@ playwright install chromium
 pytest -v
 ```
 
-The `.env` file uses the following variables:
+The Pytest configuration uses verbose output and short tracebacks:
 
-```env
-BASE_URL=https://stqa.rbc.vn
-TEST_EMAIL=ba.nguyen@email.com
-TEST_PASSWORD=password123
-TEST_DISPLAY_NAME=Nguyen Hoc Ba
+```ini
+[pytest]
+testpaths = tests
+addopts = -v --tb=short
 ```
 
-Some bonus tests also require another member account:
+## 11. Test Scenarios Covered
 
-```env
-MEMBER_OTHER_EMAIL=dam.tran@email.com
-MEMBER_OTHER_PASSWORD=password123
-MEMBER_OTHER_DISPLAY_NAME=Tran Dua Dam
-```
+The implemented suite contains 28 automated test functions across five test modules.
 
-## 4. Screenshot Evidence
-
-The assignment requires every test to produce screenshot evidence. The current implementation centralizes screenshot capture in `conftest.py`.
-
-| Test result | Screenshot folder |
+| Test Area | Scenarios |
 |---|---|
-| PASS | `screenshots/pass/` |
-| FAIL or ERROR | `screenshots/bug/` |
+| Authentication | Successful member login, successful librarian login, wrong password, unknown email, empty fields, missing email, missing password. |
+| Search and filter | Search by title, no-result search, filter by category, search by author, case-insensitive title search, case-insensitive category filter. |
+| Borrowing | Borrow available book, confirm borrow dialog, validate borrowed status, validate borrow record, validate due date. |
+| Borrow rules | Enforce borrow limit, reject suspended member borrowing, reject expired member borrowing. |
+| Returning | Return borrowed book, verify returned status, verify book availability after return. |
+| Borrow records | View personal borrowed books, verify record ownership behavior. |
+| Overdue workflows | Return on due-date boundary, return overdue borrowed book. |
+| Member management | Add valid member, reject email without domain dot, reject email without `@`, reject duplicate email. |
+| Role access | Verify normal member cannot access the Members tab. |
+| General UI | Logout and switch language to English. |
 
-Screenshot filenames are generated from the pytest `nodeid`, for example:
+## 12. Test Coverage Summary
 
-```text
-screenshots/pass/tests_test_login.py__test_login_success.png
-screenshots/bug/tests_test_search.py__test_category_bar_case_insensitive.png
-```
+| File | Number of Tests | Main Coverage |
+|---|---:|---|
+| `tests/test_login.py` | 7 | Login success and validation scenarios. |
+| `tests/test_search.py` | 6 | Book search and filtering. |
+| `tests/test_borrow_return.py` | 6 | Borrowing, returning, limits, and eligibility. |
+| `tests/test_general.py` | 2 | Logout and language switching. |
+| `tests/test_bonus.py` | 8 | Overdue handling, member management, role access, and record ownership. |
+| **Total** | **28** | **Core and extended functional workflows.** |
 
-This approach prevents missing evidence when a test fails before reaching a manual screenshot line, and it clearly separates passing evidence from bug/failure evidence.
+Requirement alignment:
 
-## 5. Required Test Cases
+| Requirement Area | Automation Coverage |
+|---|---|
+| Login | Member and librarian login, invalid credential handling, required-field behavior. |
+| View book list | Catalog interactions through search, filtering, borrow, and return workflows. |
+| Search and filter | Title search, author search, category filter, case-insensitive behavior. |
+| Borrow book | Successful borrow, borrow record creation, due-date calculation, eligibility rules. |
+| Return book | Successful return, returned status, book availability update. |
+| Overdue handling | Due-date boundary return and overdue return. |
+| Member management | Member creation, email validation, duplicate email handling, role-based access. |
+| Borrow record lookup | Personal records and ownership-based return behavior. |
 
-| TC | Test function | Objective | Main oracle / assertion |
-|---|---|---|---|
-| TC-01 | `test_login_success` | Log in with a valid email and password | The user's display name or the logout control must appear |
-| TC-02 | `test_login_fail_wrong_password` | Reject login with an incorrect password | The specific wrong-password error must appear and logout must not appear |
-| TC-03 | `test_login_fail_empty_fields` | Reject login when both fields are empty | The required-fields error must appear and logout must not appear |
-| TC-04 | `test_search_book_by_name` | Search books by name using `Flutter` | At least one result contains `Flutter` |
-| TC-05 | `test_search_book_no_result` | Search with a non-existent keyword | No book card is displayed |
-| TC-06 | `test_filter_by_category` | Filter books by the Technology category | Results exist and every book card belongs to Technology |
-| TC-07 | `test_search_by_author` | Search books by author name | At least one result contains the target author |
-| TC-08 | `test_borrow_book` | Borrow an available book | BOOK001 becomes borrowed, a borrow record is created, and due date = borrow date + 14 days |
-| TC-09 | `test_view_borrowed_books` | View the list of borrowed books | A borrow record with borrowed status is visible |
-| TC-10 | `test_return_book` | Return a borrowed book | The borrow record becomes returned and the book becomes available |
-| TC-11 | `test_logout` | Log out of the system | The app returns to the login screen |
-| TC-12 | `test_switch_language_to_english` | Switch the UI language to English | English UI text such as Logout, Borrow, Search, or Library appears |
+## 13. Test Data Management
 
-## 6. Extended and Bonus Test Cases
+The project uses deterministic seed data provided by the application and configurable test accounts from environment variables.
 
-| Test function | File | Objective | Related rule / requirement |
-|---|---|---|---|
-| `test_login_fail_nonexistent_email` | `test_login.py` | Verify that a non-existent email cannot log in | REQ-01 |
-| `test_login_fail_empty_password` | `test_login.py` | Verify that login fails when password is empty | REQ-01 |
-| `test_login_fail_empty_email` | `test_login.py` | Verify that login fails when email is empty | REQ-01 |
-| `test_search_bar_case_insensitive` | `test_search.py` | Verify case-insensitive book search | REQ-03, BR-10 |
-| `test_category_bar_case_insensitive` | `test_search.py` | Verify case-insensitive category filtering | REQ-03, BR-10 |
-| `test_borrow_exceed` | `test_borrow_return.py` | Verify that a member cannot borrow more than 3 books | REQ-04, BR-01 |
-| `test_suspended_borrow` | `test_borrow_return.py` | Verify that a suspended member cannot borrow books | REQ-04, BR-03 |
-| `test_expired_borrow` | `test_borrow_return.py` | Verify that an expired member cannot borrow books | REQ-04, BR-03 |
-| `test_tc_05_05_member_cannot_return_another_members_borrowed_book` | `test-bonus.py` | Verify that a member cannot view another member's borrow records | REQ-08, BR-07 |
-| `test_tc_05_04_cannot_return_book_that_is_already_returned` | `test-bonus.py` | Verify that returned records do not expose a return action | REQ-05 |
-| `test_tc_06_05_member_cannot_use_check_overdue_function` | `test-bonus.py` | Verify that normal members cannot use the overdue-checking function | REQ-06, role authorization |
+| Data Type | Management Approach |
+|---|---|
+| Target URL | Configured through `BASE_URL`. |
+| Default member account | Configured through `TEST_EMAIL`, `TEST_PASSWORD`, and `TEST_DISPLAY_NAME`. |
+| Librarian account | Configured through `LIBRARIAN_EMAIL` and `LIBRARIAN_PASSWORD`, or documented seed credentials. |
+| Additional member account | Configured through `MEMBER_OTHER_EMAIL` and `MEMBER_OTHER_PASSWORD`. |
+| Suspended member account | Configured through `SUSPENDED_EMAIL` and `SUSPENDED_PASSWORD`. |
+| Expired member account | Configured through `EXPIRED_EMAIL` and `EXPIRED_PASSWORD`. |
+| Application data | Stored in browser memory and restored through fresh test contexts. |
 
-The extended tests focus on negative testing and authorization testing. These areas are important because they involve role permissions, member states, and business constraints.
+Each test receives an isolated Playwright browser context. This allows tests to execute from a controlled application state and supports repeatable demonstrations.
 
-## 7. SRS Traceability
+## 14. Reporting and Evidence Collection
 
-| SRS requirement | Main content | Coverage status |
-|---|---|---|
-| REQ-01 Login | Valid login, wrong password, non-existent email, empty input | Covered with positive and negative tests |
-| REQ-02 View Book List | Display books and book status | Indirectly covered through search, borrow, and return tests |
-| REQ-03 Search & Filter | Search by title/author, filter by category, case-insensitive behavior | Covered with multiple scenarios |
-| REQ-04 Borrow Book | Available books, 3-book limit, suspended/expired member restrictions | Covered with positive and negative tests |
-| REQ-05 Return Book | Return a borrowed book and update status | Covered by successful return and already-returned-record tests |
-| REQ-06 Overdue Handling | Overdue checking is a librarian-only function | Covered by member authorization test |
-| REQ-07 Member Management | Add member, validate email, prevent duplicate email | Not directly covered yet |
-| REQ-08 Borrow Record Lookup | Members may only view their own borrow records | Covered by bonus authorization test |
+The framework provides evidence through automated screenshots and Pytest console output.
 
-## 8. Test Quality Notes
+| Reporting Mechanism | Description |
+|---|---|
+| Pytest verbose output | Displays executed tests and test status. |
+| Short traceback mode | Keeps test output concise and readable. |
+| Automatic screenshot capture | Captures a full-page screenshot after each test. |
+| Pass screenshots | Stored in `screenshots/pass/`. |
+| Evidence screenshots for failed outcomes | Stored in `screenshots/bug/`. |
+| Console messages | Used for technology detection output and screenshot capture information. |
 
-Strengths:
+Screenshot filenames are generated from test identifiers so that evidence can be matched to the corresponding scenario.
 
-- The tests use project helpers such as `enable_flutter_semantics`, `flutter_fill`, `flutter_click_button`, and `wait_for_flutter`, which are appropriate for Flutter Web CanvasKit.
-- Assertions check specific business outcomes instead of only checking that the page loaded.
-- The suite includes meaningful negative tests: wrong password, non-existent email, empty input, borrow-limit violation, suspended/expired member restrictions, and borrow-record authorization.
-- Screenshot evidence is centralized and automatically generated for both pass and failure cases.
+## 15. Challenges Encountered
 
-Limitations and risks:
+The project involved several testing challenges related to the application technology and workflow characteristics.
 
-- Some tests still use `page.wait_for_timeout()` or `time.sleep()`. These should be replaced with `wait_for_flutter()` or `locator.wait_for()` to reduce flakiness.
-- REQ-07 Member Management is not directly tested yet.
-- Some locators depend on Vietnamese text in the Semantics Tree. If the app labels change, the tests may need updates.
-- Borrow/return tests depend on specific seed data such as BOOK001, BOOK003, BR001, and BR004. This is acceptable for this assignment, but the tests must be updated if the seed data changes.
+| Challenge | Explanation |
+|---|---|
+| Canvas-rendered UI | Flutter Web CanvasKit draws most visual elements on a canvas, so normal HTML selectors are not sufficient for direct UI automation. |
+| Semantic interaction requirement | The framework needs to enable Flutter Accessibility Semantics before fields, buttons, tabs, and book records become accessible to automation. |
+| Asynchronous Flutter rendering | UI state and semantics nodes may update after user actions, requiring smart waiting logic. |
+| Bilingual interface | Tests need to handle Vietnamese labels and verify English text after language switching. |
+| Role-specific behavior | Member and librarian accounts expose different tabs and workflows. |
+| Test state control | Borrowing and returning operations change visible application state during execution. |
 
-## 9. Potential Bugs Targeted by the Tests
+These challenges shaped the framework design and led to a specialized automation approach for Flutter Web.
 
-The current tests are designed to expose the following defects if the system violates the SRS:
+## 16. Solutions Implemented
 
-| Area | Detecting test | Defect behavior |
-|---|---|---|
-| Search | `test_search_bar_case_insensitive` | Input `flutter` cannot find books containing `Flutter` |
-| Filter | `test_category_bar_case_insensitive` | Lowercase category input does not match the Technology category |
-| Borrow limit | `test_borrow_exceed` | A member can borrow a 4th book |
-| Member status | `test_suspended_borrow`, `test_expired_borrow` | Suspended or expired members can still borrow books |
-| Return | `test_tc_05_04_cannot_return_book_that_is_already_returned` | A returned record still exposes a Return Book action |
-| Access control | `test_tc_05_05_member_cannot_return_another_members_borrowed_book` | A member can see another member's borrow records |
-| Role permission | `test_tc_06_05_member_cannot_use_check_overdue_function` | A normal member can see or use the overdue-checking function |
+The framework implements several solutions to support reliable end-to-end testing.
 
-## 10. Conclusion
+| Solution | Implementation |
+|---|---|
+| Flutter Semantics enablement | `enable_flutter_semantics()` activates semantic nodes for automation. |
+| Semantic field interaction | `flutter_fill()` fills inputs using ARIA labels and Flutter text editing hosts. |
+| Semantic button interaction | `flutter_click_button()` clicks buttons through `flt-semantics` role and visible text. |
+| Smart waiting | `wait_for_flutter()` waits for text, selectors, or semantics nodes to appear. |
+| Shared login workflow | `login()` centralizes navigation, credential input, submit action, and post-login waiting. |
+| Browser context isolation | The `page` fixture creates a new context for each test. |
+| Environment-driven accounts | `.env` allows flexible account and URL configuration. |
+| Automatic evidence capture | An autouse Pytest fixture saves screenshots after test execution. |
+| Technology detection | `web_detector.py` identifies Flutter CanvasKit and supports technology-aware interaction. |
 
-The current automated test suite covers all 12 required assignment test cases and adds several extended tests for important business rules. The tests are based on the SRS, use the documented seed data, and interact through the Flutter Semantics Tree as required by the application's technical constraints.
+These solutions make the framework reusable across test files and maintain a clear separation between test scenarios and technical interaction details.
 
-Overall, the suite uses reasonably strong oracles because it checks concrete UI text, business states, record visibility, and date calculations. Future improvements should include replacing static waits with smart waits, adding direct tests for REQ-07 Member Management, and converting suitable login/search scenarios to `pytest.mark.parametrize` for clearer data-driven coverage.
+## 17. Results and Achievements
 
+The project produced a complete automation testing framework for a Flutter Web CanvasKit application.
+
+Key achievements include:
+
+| Achievement | Description |
+|---|---|
+| Completed end-to-end workflow automation | The suite automates login, search, borrow, return, member management, overdue handling, and language switching. |
+| Flutter-aware interaction model | The framework successfully uses Accessibility Semantics Tree interaction for a canvas-rendered application. |
+| Reusable framework utilities | Common browser setup, login, wait, click, fill, and screenshot operations are centralized. |
+| Structured test organization | Test cases are grouped by functional area and user workflow. |
+| Configurable execution | Environment variables support different accounts and execution environments. |
+| Evidence-based testing | Screenshots are collected automatically for review and presentation. |
+| Requirement-oriented coverage | Test scenarios are aligned with major SRS requirement areas. |
+
+The final suite contains 28 automated test functions covering both required assignment scenarios and extended business workflows.
+
+## 18. Conclusion
+
+This project successfully delivers an automation testing framework for the Library Book Borrowing System. The framework demonstrates how Pytest and Playwright can be adapted for a Flutter Web CanvasKit application by using the Flutter Accessibility Semantics Tree as the primary interaction layer.
+
+From a software testing perspective, the project verifies important library workflows across member and librarian roles, validates business rules through end-to-end scenarios, and provides screenshot evidence for evaluation. The framework is organized around reusable fixtures and helper functions, making the test suite structured, repeatable, and suitable for academic demonstration.
+
+The completed work represents a practical automated testing deliverable for a modern web application with non-standard rendering behavior.
+
+## 19. Future Enhancements
+
+Future development may extend the existing framework in the following directions:
+
+| Enhancement | Expected Value |
+|---|---|
+| Continuous integration execution | Run the test suite automatically on repository updates and preserve artifacts. |
+| HTML test dashboard | Present test results, screenshots, and requirement mapping in a visual report. |
+| Browser matrix execution | Demonstrate behavior across additional supported browser engines. |
+| Parameterized test data | Execute more account, book, category, and record combinations. |
+| Performance checkpoints | Record key workflow timings such as login, search, borrow, and return. |
+| Presentation package | Prepare selected screenshots and coverage tables for project demonstration. |
 

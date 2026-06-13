@@ -19,8 +19,55 @@ os.makedirs(BUG_SCREENSHOT_DIR, exist_ok=True)
 
 
 def _safe_screenshot_name(nodeid):
-    name = nodeid.replace("\\", "_").replace("/", "_").replace("::", "__")
-    return "".join(char if char.isalnum() or char in "._-" else "_" for char in name)
+    """Create a short filesystem-safe screenshot name from a pytest node id."""
+    case_aliases = {
+        "switch_language_to_english": "language_en",
+        "search_book_by_name": "name",
+        "search_book_no_result": "empty",
+        "filter_by_category": "category",
+        "search_by_author": "author",
+        "search_bar_case_insensitive": "case",
+        "category_bar_case_insensitive": "category_case",
+        "login_ok": "ok",
+        "login_wrong_password": "wrong_password",
+        "login_empty_fields": "empty",
+        "login_unknown_email": "unknown_email",
+        "login_no_password": "no_password",
+        "login_no_email": "no_email",
+        "login_librarian": "librarian",
+        "borrow_book": "book",
+        "view_borrowed_books": "list",
+        "return_book": "return",
+        "borrow_exceed": "limit",
+        "suspended_borrow": "suspended",
+        "expired_borrow": "expired",
+        "due_date": "due",
+        "overdue_book": "overdue",
+        "valid_member": "member_ok",
+        "domain_dot": "no_dot",
+        "no_at": "no_at",
+        "duplicate_email": "dup_email",
+        "member_tab": "member_tab",
+        "foreign_return": "foreign",
+    }
+
+    path, _, test_name = nodeid.partition("::")
+    module = os.path.splitext(os.path.basename(path))[0]
+    module = module.removeprefix("test_").removeprefix("test-")
+    module = {"borrow_return": "borrow"}.get(module, module)
+
+    case_name, _, params = test_name.partition("[")
+    case_name = case_name.removeprefix("test_")
+    case_name = case_aliases.get(case_name, case_name)
+    case_name = case_name.removeprefix(f"{module}_")
+    short_name = f"{module}_{case_name}"
+    if params:
+        short_name = f"{short_name}_{params.rstrip(']')}"
+
+    return "".join(
+        char if char.isalnum() or char in "._-" else "_"
+        for char in short_name
+    )
 
 
 @pytest.hookimpl(hookwrapper=True)

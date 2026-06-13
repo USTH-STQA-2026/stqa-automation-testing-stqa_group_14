@@ -28,6 +28,21 @@ from playwright.sync_api import expect
 import re
 import time
 
+def login_with_env_account(page, base_url, email_env, password_env):
+    """Log in with credentials from dedicated environment variables."""
+    email = os.getenv(email_env)
+    password = os.getenv(password_env)
+    if not email or not password:
+        pytest.skip(f"Missing {email_env} or {password_env} in .env")
+
+    page.goto(base_url, wait_until="load", timeout=60000)
+    enable_flutter_semantics(page)
+    flutter_fill(page, "Email", email)
+    flutter_fill(page, "Mật khẩu", password)
+    flutter_click_button(page, "Đăng nhập")
+    wait_for_flutter(page, text="Đăng xuất")
+    enable_flutter_semantics(page)
+
 def borrow(page, test_config, book_name):
     """Helper function: borrow a book book_name
     Precondition: must be at the Books tab already
@@ -264,10 +279,12 @@ def test_suspended_borrow(page, test_config):
     """
     
     # 1. Login with the account of MEM004
-    page.goto(test_config["base_url"], wait_until="load", timeout=60000)
-    enable_flutter_semantics(page)
-    login(page, test_config)
-    enable_flutter_semantics(page)
+    login_with_env_account(
+        page,
+        test_config["base_url"],
+        "SUSPENDED_EMAIL",
+        "SUSPENDED_PASSWORD",
+    )
 
     # screenshots of program state before borrowing
     page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]').first.click()
@@ -308,10 +325,12 @@ def test_expired_borrow(page, test_config):
     """
 
     # 1. Login with the account of MEM005
-    page.goto(test_config["base_url"], wait_until="load", timeout=60000)
-    enable_flutter_semantics(page)
-    login(page, test_config)
-    enable_flutter_semantics(page)
+    login_with_env_account(
+        page,
+        test_config["base_url"],
+        "EXPIRED_EMAIL",
+        "EXPIRED_PASSWORD",
+    )
 
     # screenshots of program state before borrowing
     page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]').first.click()
