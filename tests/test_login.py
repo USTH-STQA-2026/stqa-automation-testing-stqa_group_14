@@ -222,3 +222,42 @@ def test_login_no_email(page, test_config):
     flutter_click_button(page, LOGIN_BUTTON)
 
     _assert_not_logged_in(page, EMPTY_FIELDS_ERROR)
+
+# Extra: Verify login succeeds with librarian account
+def test_login_librarian(page):
+    """Extra: Login succeeds with librarian account (*Đăng nhập thành công với tài khoản thủ thư*)
+
+    Description (*Mô tả*):
+        Open login page → fill librarian credentials directly →
+        click Login → verify display name or logout control appears.
+
+        (*Mở trang đăng nhập → nhập thông tin thủ thư trực tiếp →
+        click Đăng nhập → kiểm tra tên hiển thị hoặc nút đăng xuất xuất hiện.*)
+
+    Steps (*Các bước*):
+        1. Navigate to "https://stqa.rbc.vn" and enable Flutter semantics
+        2. Fill Email field with "librarian@library.com"
+           (*Nhập "librarian@library.com" vào ô Email*)
+        3. Fill Mật khẩu field with "admin123"
+           (*Nhập "admin123" vào ô Mật khẩu*)
+        4. Click "Đăng nhập" button (*Click nút "Đăng nhập"*)
+        5. Assert: display name "Nguyễn Thủ Thư" or logout control is visible
+           (*Assert: tên "Nguyễn Thủ Thư" hoặc nút đăng xuất có trên trang*)
+    """
+    page.goto("https://stqa.rbc.vn", wait_until="networkidle", timeout=60000)
+    enable_flutter_semantics(page)
+
+    flutter_fill(page, EMAIL_LABEL, "librarian@library.com")
+    flutter_fill(page, PASSWORD_LABEL, "admin123")
+    flutter_click_button(page, LOGIN_BUTTON)
+
+    wait_for_flutter(page, text="Đăng xuất")
+    sem_text = _semantics_text(page)
+
+    has_display_name = "Nguyễn Thủ Thư" in sem_text
+    has_logout = any(text in sem_text for text in LOGOUT_TEXTS)
+    assert has_display_name or has_logout, (
+        "Librarian login failed: expected display name 'Nguyễn Thủ Thư' "
+        f"or logout control after valid login. Actual semantics: {sem_text}"
+    )
+
