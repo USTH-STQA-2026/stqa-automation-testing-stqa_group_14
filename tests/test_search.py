@@ -22,8 +22,12 @@ from conftest import (
 )
 
 
-def test_search_book_by_name(page, test_config):
+# Test case: Search book by name
+def test_search_name(page, test_config):
     """TC-04: Search book by name – results found (*Tìm kiếm sách theo tên — tìm thấy kết quả*)
+
+    Input: Keyword "Flutter" entered in the search bar
+    Output: Books with label containing "Flutter" are displayed
 
     Description (*Mô tả*):
         Log in → search keyword "Flutter" → verify Flutter books appear in results.
@@ -41,7 +45,7 @@ def test_search_book_by_name(page, test_config):
     # Act
     flutter_fill(page, "Tìm kiếm theo tên sách hoặc tác giả...", "Flutter")
 
-    # Wait
+    # Wait (no more than 10 seconds for results to load)
     page.locator('flt-semantics[role="group"][aria-label*="Mã: BOOK"]').first.wait_for(timeout=10000)
 
     # Assert
@@ -49,9 +53,12 @@ def test_search_book_by_name(page, test_config):
     assert results.count() > 0, "No books containing 'Flutter' were found"
     
 
-
-def test_search_book_no_result(page, test_config):
+# Test case: Search book with non-existent keyword
+def test_search_no_result(page, test_config):
     """TC-05: Search book – no results (*Tìm kiếm sách — không có kết quả*)
+
+    Input: Keyword "abcxyz999" entered in the search bar
+    Output: No book is displayed
 
     Description (*Mô tả*):
         Log in → search a non-existent keyword (e.g. "xyz_khong_ton_tai_12345")
@@ -67,7 +74,7 @@ def test_search_book_no_result(page, test_config):
     # Act
     flutter_fill(page, "Tìm kiếm theo tên sách hoặc tác giả...", "abcxyz999")
 
-    # Wait
+    # Wait (ensure results have loaded)
     page.wait_for_timeout(2000)
 
     # Assert
@@ -75,9 +82,12 @@ def test_search_book_no_result(page, test_config):
     assert books.count() == 0, f"Expected no results but found {books.count()} book(s)"
 
 
-
-def test_filter_by_category(page, test_config):
+# Test case: Filter books by category
+def test_filter_category(page, test_config):
     """TC-06: Filter books by category 'Công nghệ' (*Lọc sách theo thể loại 'Công nghệ'*)
+
+    Input: "Công nghệ" entered in the category filter bar
+    Output: Books belonging to "Công nghệ" category are displayed
 
     Description (*Mô tả*):
         Log in → enter "Công nghệ" in the category filter → verify all displayed books
@@ -109,9 +119,12 @@ def test_filter_by_category(page, test_config):
         assert "Công nghệ" in label, f"Book {i+1} does not belong to 'Công nghệ': {label}"
 
 
-
-def test_search_by_author(page, test_config):
+# Test case: Search book by author name
+def test_search_author(page, test_config):
     """TC-07: Search book by author name (*Tìm kiếm sách theo tên tác giả*)
+
+    Input: Author name "Nguyễn Minh Đức" entered in the search bar
+    Output: Books authored by "Nguyễn Minh Đức" are displayed
 
     Description (*Mô tả*):
         Log in → search author name (e.g. "Nguyễn Minh Đức") → verify results found.
@@ -135,38 +148,30 @@ def test_search_by_author(page, test_config):
     assert results.count() > 0, "No books found for author 'Nguyễn Minh Đức'"
     
 
+# Test case (bonus, data-driven): Case-insensitivity for search bar and category filter
+@pytest.mark.parametrize("aria_label, keyword, expected_label", [
+    ("Tìm kiếm theo tên sách hoặc tác giả...", "flutter", "Flutter"),
+    ("Tìm kiếm theo tên sách hoặc tác giả...", "FLUTTER", "Flutter"),
+    ("Lọc theo thể loại (VD: Công nghệ, Kinh tế...)", "công nghệ", "Công nghệ"),
+    ("Lọc theo thể loại (VD: Công nghệ, Kinh tế...)", "CÔNG NGHỆ", "Công nghệ"),
+], ids=["search_bar_lower", "search_bar_upper", "category_bar_lower", "category_bar_upper"])
+def test_case_insensitive(page, test_config, aria_label, keyword, expected_label):
+    """TC-08/09: Search bar & category filter - case-insensitive (chữ thường/hoa)
 
-def test_search_bar_case_insensitive(page, test_config):
-    """TC-08: Search bar - case-insensitive (chữ thường/hoa)
+    Input: Lowercase keyword in lowercase or uppercase ("flutter"/"FLUTTER" & "công nghệ"/"CÔNG NGHỆ") entered in search bar, category filter
+    Output: Books matching the keyword are displayed regardless of letter case (same results as TC-04 & TC-06)
 
+    Steps: Log in → enter keyword into the given field → verify results still match.
     """
     # Arrange
     login(page, test_config)
 
     # Act
-    flutter_fill(page, "Tìm kiếm theo tên sách hoặc tác giả...", "flutter")
+    flutter_fill(page, aria_label, keyword)
 
-    # Wait
-    page.locator('flt-semantics[role="group"][aria-label*="Mã: BOOK"]').first.wait_for(timeout=10000)
-
-    # Assert
-    results = page.locator('flt-semantics[aria-label*="Flutter"]')
-    assert results.count() > 0, "Bug: search bar is case-sensitive — lowercase input returned no results"
-
-
-
-def test_category_bar_case_insensitive(page, test_config):
-    """TC-09: Category bar - case-insensitive (chữ thường/hoa)
-    
-    """
-    # Arrange
-    login(page, test_config)
-
-    # Act
-    flutter_fill(page, "Lọc theo thể loại (VD: Công nghệ, Kinh tế...)", "công nghệ")
-
-    # Wait
+    # Wait (ensure results have loaded)
     page.wait_for_timeout(2000)
 
+    # Assert
     books = page.locator('flt-semantics[role="group"][aria-label*="Mã: BOOK"]')
-    assert books.count() > 0, "Bug confirmed: category bar is case-sensitive — lowercase input returned no results"
+    assert books.count() > 0, f"Bug: '{aria_label}' is case-sensitive — input '{keyword}' returned no results"
