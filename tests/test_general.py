@@ -1,21 +1,4 @@
-"""
-Logout & Language Tests (*Kiểm thử Đăng xuất & Chuyển ngôn ngữ*) — Library Book Borrowing System (*Hệ thống Mượn sách thư viện*)
-
-Students must complete ALL 2 test cases in this file.
-(*Sinh viên cần hoàn thành TẤT CẢ 2 test case trong file này.*)
-
-Hints (*Gợi ý*):
-    - Use login() helper to log in (*Dùng login() helper để đăng nhập*)
-    - Logout button: 'flt-semantics[role="button"]:has-text("Đăng xuất")'
-      (*Nút Đăng xuất*)
-    - Language switch EN button: 'flt-semantics[role="button"]:has-text("EN")'
-      (*Nút chuyển ngôn ngữ EN*)
-    - After logout: page returns to login (has "Đăng nhập" button and "Email" input)
-      (*Sau đăng xuất: trang quay về login*)
-    - After switching to EN: text "Logout", "Borrow", "Search", "Library" may appear
-      (*Sau chuyển EN: text tiếng Anh có thể xuất hiện*)
-"""
-import time
+"""General account and UI behavior tests for logout and language switching."""
 import pytest
 from conftest import (
     enable_flutter_semantics, flutter_click_button,
@@ -24,17 +7,11 @@ from conftest import (
 
 
 def test_logout(page, test_config):
-    """TC-11: Logout success (*Đăng xuất thành công*)
-    Description (*Mô tả*):
-        Log in → click Logout → verify page returns to login screen.
-        (*Đăng nhập → click Đăng xuất → kiểm tra quay về trang đăng nhập.*)
+    """TC-11: Verify a logged-in member can log out successfully.
 
-    Suggested steps (*Gợi ý*):
-        1. login(page, test_config)
-        2. Find "Đăng xuất" button and click (*Tìm nút "Đăng xuất" và click*)
-        3. Wait 3s, re-enable semantics (*Đợi 3s, bật lại semantics*)
-        4. Assert: "Đăng nhập" button or Email input exists
-           (*Assert: có nút "Đăng nhập" hoặc ô input Email*)
+    Precondition: Member account from test_config can log in.
+    Input/Action: Click the logout control after login.
+    Expected: The app returns to the login screen and shows login/email controls.
     """
     login(page, test_config)
 
@@ -49,17 +26,11 @@ def test_logout(page, test_config):
 
 
 def test_switch_language_to_english(page, test_config):
-    """TC-12: Switch language to English (*Chuyển ngôn ngữ sang tiếng Anh*)
-    Description (*Mô tả*):
-        Log in → click "EN" button → verify UI switches to English.
-        (*Đăng nhập → click nút "EN" → kiểm tra giao diện chuyển sang tiếng Anh.*)
+    """TC-12: Verify the Vietnamese UI can switch to English.
 
-    Suggested steps (*Gợi ý*):
-        1. login(page, test_config)
-        2. Find "EN" button and click (*Tìm nút "EN" và click*)
-        3. Wait 2s, re-enable semantics (*Đợi 2s, bật lại semantics*)
-        4. Get sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
-        5. Assert: "Logout" or "Borrow" or "Library" in sem_text
+    Precondition: Member account from test_config can log in.
+    Input/Action: Click the EN language button.
+    Expected: Core navigation text is rendered in English, such as Logout/Borrow/Search.
     """
     login(page, test_config)
 

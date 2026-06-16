@@ -1,3 +1,5 @@
+"""Login validation tests for member and librarian accounts."""
+
 from conftest import (
     enable_flutter_semantics,
     flutter_click_button,
@@ -43,27 +45,12 @@ def _assert_not_logged_in(page, expected_error):
     )
 
 
-# TC-01: Verify login succeeds with valid email and password
 def test_login_ok(page, test_config):
-    """TC-01: Login succeeds with valid email and password (*Đăng nhập thành công với email và mật khẩu hợp lệ*)
+    """TC-01: Verify valid member credentials can log in.
 
-    Description (*Mô tả*):
-        Open login page → fill valid credentials → click Login →
-        verify the user's display name or logout control appears.
-
-        (*Mở trang đăng nhập → nhập thông tin hợp lệ → click Đăng nhập →
-        kiểm tra tên hiển thị hoặc nút đăng xuất xuất hiện.*)
-
-    Steps (*Các bước*):
-        1. _open_login_page(page, test_config)
-        2. Fill Email field with test_config["email"]
-           (*Nhập Email từ test_config["email"]*)
-        3. Fill Mật khẩu field with test_config["password"]
-           (*Nhập Mật khẩu từ test_config["password"]*)
-        4. Click "Đăng nhập" button (*Click nút "Đăng nhập"*)
-        5. Wait for "Đăng xuất" text to appear (*Chờ text "Đăng xuất" xuất hiện*)
-        6. Assert: display name or logout control is visible
-           (*Assert: tên hiển thị hoặc nút đăng xuất có trên trang*)
+    Precondition: The base URL from test_config opens the login page.
+    Input/Action: Submit email and password from test_config.
+    Expected: The configured display name or a logout control appears.
     """
 
     _open_login_page(page, test_config)
@@ -83,26 +70,12 @@ def test_login_ok(page, test_config):
     )
 
 
-# TC-02: Verify login fails with correct email but wrong password
 def test_login_wrong_password(page, test_config):
-    """TC-02: Login fails with correct email but wrong password (*Đăng nhập thất bại với email đúng nhưng sai mật khẩu*)
+    """TC-02: Verify login rejects an incorrect password.
 
-    Description (*Mô tả*):
-        Open login page → fill valid email and an incorrect password →
-        click Login → verify error message and no logout control appears.
-
-        (*Mở trang đăng nhập → nhập email hợp lệ và mật khẩu sai →
-        click Đăng nhập → kiểm tra thông báo lỗi và không có nút đăng xuất.*)
-
-    Steps (*Các bước*):
-        1. _open_login_page(page, test_config)
-        2. Fill Email field with test_config["email"]
-           (*Nhập Email từ test_config["email"]*)
-        3. Fill Mật khẩu field with "wrongpassword"
-           (*Nhập "wrongpassword" vào ô Mật khẩu*)
-        4. Click "Đăng nhập" button (*Click nút "Đăng nhập"*)
-        5. Assert: error "Mật khẩu không đúng" shown, no logout control
-           (*Assert: hiện lỗi "Mật khẩu không đúng", không có nút đăng xuất*)
+    Precondition: The base URL from test_config opens the login page.
+    Input/Action: Submit the configured email with password "wrongpassword".
+    Expected: The wrong-password error is shown and no logout control appears.
     """
     _open_login_page(page, test_config)
 
@@ -113,23 +86,12 @@ def test_login_wrong_password(page, test_config):
     _assert_not_logged_in(page, WRONG_PASSWORD_ERROR)
 
 
-# TC-03: Verify login fails when both email and password are empty
 def test_login_empty_fields(page, test_config):
-    """TC-03: Login fails when both email and password are empty (*Đăng nhập thất bại khi để trống cả email và mật khẩu*)
+    """TC-03: Verify login rejects an empty form.
 
-    Description (*Mô tả*):
-        Open login page → click Login without filling any field →
-        verify error message and no logout control appears.
-
-        (*Mở trang đăng nhập → click Đăng nhập mà không nhập gì →
-        kiểm tra thông báo lỗi và không có nút đăng xuất.*)
-
-    Steps (*Các bước*):
-        1. _open_login_page(page, test_config)
-        2. Click "Đăng nhập" button without filling any field
-           (*Click nút "Đăng nhập" mà không điền thông tin*)
-        3. Assert: error "Vui lòng nhập email và mật khẩu" shown, no logout control
-           (*Assert: hiện lỗi "Vui lòng nhập email và mật khẩu", không có nút đăng xuất*)
+    Precondition: The base URL from test_config opens the login page.
+    Input/Action: Submit the login form without filling email or password.
+    Expected: The required-fields error is shown and no logout control appears.
     """
     _open_login_page(page, test_config)
 
@@ -138,26 +100,12 @@ def test_login_empty_fields(page, test_config):
     _assert_not_logged_in(page, EMPTY_FIELDS_ERROR)
 
 
-# Extra: Verify login fails when email does not exist in the system
 def test_login_unknown_email(page, test_config):
-    """Extra: Login fails when email does not exist in the system (*Đăng nhập thất bại khi email không tồn tại trong hệ thống*)
+    """TC-04: Verify login rejects an email that does not exist.
 
-    Description (*Mô tả*):
-        Open login page → fill a non-existent email and any password →
-        click Login → verify error message and no logout control appears.
-
-        (*Mở trang đăng nhập → nhập email không tồn tại và mật khẩu bất kỳ →
-        click Đăng nhập → kiểm tra thông báo lỗi và không có nút đăng xuất.*)
-
-    Steps (*Các bước*):
-        1. _open_login_page(page, test_config)
-        2. Fill Email field with "khongtontai@gmail.com"
-           (*Nhập "khongtontai@gmail.com" vào ô Email*)
-        3. Fill Mật khẩu field with "password123"
-           (*Nhập "password123" vào ô Mật khẩu*)
-        4. Click "Đăng nhập" button (*Click nút "Đăng nhập"*)
-        5. Assert: error "Không tìm thấy thành viên" shown, no logout control
-           (*Assert: hiện lỗi "Không tìm thấy thành viên", không có nút đăng xuất*)
+    Precondition: The base URL from test_config opens the login page.
+    Input/Action: Submit "khongtontai@gmail.com" with password "password123".
+    Expected: The member-not-found error is shown and no logout control appears.
     """
     _open_login_page(page, test_config)
 
@@ -168,25 +116,12 @@ def test_login_unknown_email(page, test_config):
     _assert_not_logged_in(page, NONEXISTENT_EMAIL_ERROR)
 
 
-# Extra: Verify login fails when password field is left empty
 def test_login_no_password(page, test_config):
-    """Extra: Login fails when password field is left empty (*Đăng nhập thất bại khi để trống mật khẩu*)
+    """TC-05: Verify login rejects a missing password.
 
-    Description (*Mô tả*):
-        Open login page → fill valid email but leave password empty →
-        click Login → verify error message and no logout control appears.
-
-        (*Mở trang đăng nhập → nhập email hợp lệ nhưng để trống mật khẩu →
-        click Đăng nhập → kiểm tra thông báo lỗi và không có nút đăng xuất.*)
-
-    Steps (*Các bước*):
-        1. _open_login_page(page, test_config)
-        2. Fill Email field with test_config["email"]
-           (*Nhập Email từ test_config["email"]*)
-        3. Leave Mật khẩu field empty (*Để trống ô Mật khẩu*)
-        4. Click "Đăng nhập" button (*Click nút "Đăng nhập"*)
-        5. Assert: error "Vui lòng nhập email và mật khẩu" shown, no logout control
-           (*Assert: hiện lỗi "Vui lòng nhập email và mật khẩu", không có nút đăng xuất*)
+    Precondition: The base URL from test_config opens the login page.
+    Input/Action: Submit the configured email with an empty password field.
+    Expected: The required-fields error is shown and no logout control appears.
     """
     _open_login_page(page, test_config)
 
@@ -196,25 +131,12 @@ def test_login_no_password(page, test_config):
     _assert_not_logged_in(page, EMPTY_FIELDS_ERROR)
 
 
-# Extra: Verify login fails when email field is left empty
 def test_login_no_email(page, test_config):
-    """Extra: Login fails when email field is left empty (*Đăng nhập thất bại khi để trống email*)
+    """TC-06: Verify login rejects a missing email.
 
-    Description (*Mô tả*):
-        Open login page → leave email empty but fill valid password →
-        click Login → verify error message and no logout control appears.
-
-        (*Mở trang đăng nhập → để trống email nhưng nhập mật khẩu hợp lệ →
-        click Đăng nhập → kiểm tra thông báo lỗi và không có nút đăng xuất.*)
-
-    Steps (*Các bước*):
-        1. _open_login_page(page, test_config)
-        2. Leave Email field empty (*Để trống ô Email*)
-        3. Fill Mật khẩu field with test_config["password"]
-           (*Nhập Mật khẩu từ test_config["password"]*)
-        4. Click "Đăng nhập" button (*Click nút "Đăng nhập"*)
-        5. Assert: error "Vui lòng nhập email và mật khẩu" shown, no logout control
-           (*Assert: hiện lỗi "Vui lòng nhập email và mật khẩu", không có nút đăng xuất*)
+    Precondition: The base URL from test_config opens the login page.
+    Input/Action: Submit the configured password with an empty email field.
+    Expected: The required-fields error is shown and no logout control appears.
     """
     _open_login_page(page, test_config)
 
@@ -223,26 +145,12 @@ def test_login_no_email(page, test_config):
 
     _assert_not_logged_in(page, EMPTY_FIELDS_ERROR)
 
-# Extra: Verify login succeeds with librarian account
 def test_login_librarian(page):
-    """Extra: Login succeeds with librarian account (*Đăng nhập thành công với tài khoản thủ thư*)
+    """TC-07: Verify valid librarian credentials can log in.
 
-    Description (*Mô tả*):
-        Open login page → fill librarian credentials directly →
-        click Login → verify display name or logout control appears.
-
-        (*Mở trang đăng nhập → nhập thông tin thủ thư trực tiếp →
-        click Đăng nhập → kiểm tra tên hiển thị hoặc nút đăng xuất xuất hiện.*)
-
-    Steps (*Các bước*):
-        1. Navigate to "https://stqa.rbc.vn" and enable Flutter semantics
-        2. Fill Email field with "librarian@library.com"
-           (*Nhập "librarian@library.com" vào ô Email*)
-        3. Fill Mật khẩu field with "admin123"
-           (*Nhập "admin123" vào ô Mật khẩu*)
-        4. Click "Đăng nhập" button (*Click nút "Đăng nhập"*)
-        5. Assert: display name "Nguyễn Thủ Thư" or logout control is visible
-           (*Assert: tên "Nguyễn Thủ Thư" hoặc nút đăng xuất có trên trang*)
+    Precondition: The production login page is reachable.
+    Input/Action: Submit librarian@library.com with password admin123.
+    Expected: The librarian display name or a logout control appears.
     """
     page.goto("https://stqa.rbc.vn", wait_until="networkidle", timeout=60000)
     enable_flutter_semantics(page)

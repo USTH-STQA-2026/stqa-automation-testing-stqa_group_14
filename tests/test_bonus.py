@@ -1,3 +1,5 @@
+"""Bonus business-rule tests for borrow return and member management."""
+
 import os
 import re
 import pytest
@@ -30,6 +32,9 @@ RETURNED_STATUS = "Đã trả"
 BORROWING_STATUS = "Đang mượn"
 AVAILABLE_STATUS = "Có sẵn"
 OVERDUE = "Quá hạn"
+MEMBER_SUCCESS = "Thêm thành viên thành công"
+EMAIL_INVALID = "Email không hợp lệ"
+EMAIL_EXISTS = "tồn tại"
 
 
 def _require_env(*names):
@@ -186,12 +191,23 @@ def _click_return(record):
     button.first.click()
 
 
+def _wait_for_member_submit_result(page):
+    page.locator(
+        f'flt-semantics:has-text("{MEMBER_SUCCESS}"), '
+        f'flt-semantics[aria-label*="{MEMBER_SUCCESS}"], '
+        f'flt-semantics:has-text("{EMAIL_INVALID}"), '
+        f'flt-semantics[aria-label*="{EMAIL_INVALID}"], '
+        f'flt-semantics:has-text("{EMAIL_EXISTS}"), '
+        f'flt-semantics[aria-label*="{EMAIL_EXISTS}"]'
+    ).first.wait_for(state="attached", timeout=10000)
+
+
 def _submit_member(page, name, email, phone):
     flutter_fill(page, FULL_NAME_LABEL, name)
     flutter_fill(page, "Email", email)
     flutter_fill(page, PHONE_LABEL, phone)
     flutter_click_button(page, ADD_MEMBER_BUTTON)
-    page.wait_for_timeout(1000)
+    _wait_for_member_submit_result(page)
     enable_flutter_semantics(page)
 
 
@@ -228,7 +244,12 @@ def _assert_returned(page, record_code, book_name):
 
 
 def test_due_date(page, test_config):
-    """TC-05-02: Return a book on the due date boundary."""
+    """TC-05-02: Verify returning exactly on the due date boundary.
+
+    Precondition: Date is mocked to 2024-09-15 and BR001 has due date 15/09/2024.
+    Input/Action: Return BR001 from the member borrow list.
+    Expected: Return succeeds, overdue/boundary notice is visible, and the book becomes available.
+    """
     _mock_date(page, "2024-09-15")
     _login_member(page, test_config)
     _open_returns(page)
@@ -244,7 +265,12 @@ def test_due_date(page, test_config):
 
 
 def test_overdue_book(page, test_config):
-    """TC-05-03: Return an overdue borrowed book."""
+    """TC-05-03: Verify returning an overdue borrowed book.
+
+    Precondition: Date is mocked to 2026-05-27 and BR001 is still borrowing.
+    Input/Action: Return overdue record BR001 from the member borrow list.
+    Expected: Return succeeds, overdue warning is visible, and record status becomes returned.
+    """
     _mock_date(page, "2026-05-27")
     _login_member(page, test_config)
     _open_returns(page)
@@ -260,7 +286,12 @@ def test_overdue_book(page, test_config):
 
 
 def test_valid_member(page, test_config):
-    """TC-07-01: Add a new member with a valid email."""
+    """TC-07-01: Verify librarian can create a member with a valid email.
+
+    Precondition: LIBRARIAN_EMAIL and LIBRARIAN_PASSWORD are set in the environment.
+    Input/Action: Submit Nguyen Van Test, newmember@test.com, and 0901234567.
+    Expected: Success message appears and the new member email is listed.
+    """
     _login_librarian(page, test_config)
     _open_add(page)
 
@@ -281,7 +312,12 @@ def test_valid_member(page, test_config):
 
 
 def test_domain_dot(page, test_config):
-    """TC-07-02: Reject email missing a dot in the domain."""
+    """TC-07-02: Verify member creation rejects email without a domain dot.
+
+    Precondition: LIBRARIAN_EMAIL and LIBRARIAN_PASSWORD are set in the environment.
+    Input/Action: Submit member email "user@domain".
+    Expected: Member is not created and an email validation error is shown.
+    """
     _login_librarian(page, test_config)
     _open_add(page)
     _submit_member(page, "Missing Domain Dot", "user@domain", "0901234568")
@@ -289,7 +325,12 @@ def test_domain_dot(page, test_config):
 
 
 def test_no_at(page, test_config):
-    """TC-07-03: Reject email missing @."""
+    """TC-07-03: Verify member creation rejects email without @.
+
+    Precondition: LIBRARIAN_EMAIL and LIBRARIAN_PASSWORD are set in the environment.
+    Input/Action: Submit member email "userdomain.com".
+    Expected: Member is not created and an email validation error is shown.
+    """
     _login_librarian(page, test_config)
     _open_add(page)
     _submit_member(page, "Missing At", "userdomain.com", "0901234569")
@@ -297,7 +338,12 @@ def test_no_at(page, test_config):
 
 
 def test_duplicate_email(page, test_config):
-    """TC-07-04: Reject duplicate member email."""
+    """TC-07-04: Verify member creation rejects duplicate email.
+
+    Precondition: LIBRARIAN_EMAIL and LIBRARIAN_PASSWORD are set in the environment.
+    Input/Action: Submit existing member email "ba.nguyen@email.com".
+    Expected: Member is not created and duplicate-email feedback is shown.
+    """
     _login_librarian(page, test_config)
     _open_add(page)
     _submit_member(page, "Duplicate Email", "ba.nguyen@email.com", "0901234570")
@@ -313,14 +359,24 @@ def test_duplicate_email(page, test_config):
 
 
 def test_member_tab(page, test_config):
-    """TC-07-05: Member account cannot access the Members tab."""
+    """TC-07-05: Verify normal members cannot access member management.
+
+    Precondition: Member account from test_config can log in.
+    Input/Action: Inspect the main tab list after member login.
+    Expected: The Members tab is not visible to that user.
+    """
     _login_member(page, test_config)
     members_tab = page.locator(f'flt-semantics[role="tab"][aria-label="{MEMBERS_TAB}"]')
     assert members_tab.count() == 0, "Members tab is visible to a normal member"
 
 
 def test_foreign_return(page, test_config):
-    """TC-05-05: Member cannot return another member's borrowed book."""
+    """TC-05-05: Verify a member cannot return another member's borrowed book.
+
+    Precondition: MEMBER_OTHER_EMAIL and MEMBER_OTHER_PASSWORD are set in the environment.
+    Input/Action: Log in as the other member and look up MEM002 borrow records.
+    Expected: Foreign borrow record is hidden or has no return action available.
+    """
     _login_other(page, test_config)
     _open_returns(page)
     if not _open_tab(page, LOOKUP_TAB):

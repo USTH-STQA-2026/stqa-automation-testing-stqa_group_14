@@ -1,23 +1,5 @@
-"""
-Borrow & Return Tests (*Kiểm thử Mượn & Trả sách*) — Library Book Borrowing System (*Hệ thống Mượn sách thư viện*)
-
-Students must complete ALL 3 test cases in this file.
-(*Sinh viên cần hoàn thành TẤT CẢ 3 test case trong file này.*)
-
-Hints (*Gợi ý*):
-    - Use login() helper to log in (*Dùng login() helper để đăng nhập*)
-    - "Mượn / Trả" tab: role="tab", aria-label="Mượn / Trả"
-    - Available books have "Có sẵn" in aria-label, borrowed books have "Đang mượn"
-      (*Sách "Có sẵn" có aria-label chứa "Có sẵn", sách "Đang mượn" chứa "Đang mượn"*)
-    - Borrow button: 'flt-semantics[role="button"]:has-text("Mượn sách này")'
-      (*Nút mượn*)
-    - After clicking "Mượn sách này", a confirmation dialog appears — click "Mượn" again
-      (*Sau khi click "Mượn sách này" sẽ hiện dialog xác nhận — cần click nút "Mượn" lần nữa*)
-    - Return button: 'flt-semantics[role="button"]:has-text("Trả sách")'
-      (*Nút trả*)
-"""
+"""Borrow and return workflow tests for the library system."""
 import os
-import time
 import pytest
 from conftest import (
     enable_flutter_semantics, flutter_fill, flutter_click_button,
@@ -26,7 +8,6 @@ from conftest import (
 from datetime import datetime, timedelta
 from playwright.sync_api import expect
 import re
-import time
 
 def login_with_env_account(page, base_url, email_env, password_env):
     """Log in with credentials from dedicated environment variables."""
@@ -64,26 +45,11 @@ def borrow(page, test_config, book_name):
 
 
 def test_borrow_book(page, test_config):
-    """TC-08: Borrow an available book (*Mượn sách có trạng thái 'Có sẵn'*)
+    """TC-08/09: Verify borrowing an available book creates the correct record.
 
-    Description (*Mô tả*):
-        Log in → find an "Available" book → click "Mượn sách này" → confirm dialog
-        → verify book status changes to "Borrowed".
-        (*Đăng nhập → tìm sách "Có sẵn" → click "Mượn sách này" → xác nhận dialog
-        → kiểm tra sách chuyển sang trạng thái "Đang mượn".*)
-
-    Suggested steps (*Gợi ý các bước*):
-        1. login(page, test_config)
-        2. Find available book: page.locator('flt-semantics[role="group"][aria-label*="Có sẵn"]')
-           (*Tìm sách Có sẵn*)
-        3. Click "Mượn sách này" button inside that book card
-           (*Click nút "Mượn sách này" trong sách đó*)
-        4. Wait for confirmation dialog, re-enable semantics
-           (*Đợi dialog xác nhận, bật lại semantics*)
-        5. Click "Mượn" button (confirm button in dialog)
-           (*Click nút "Mượn" — nút xác nhận trong dialog*)
-        6. Assert: "Đang mượn" or "thành công" appears
-           (*Assert: "Đang mượn" hoặc "thành công" xuất hiện*)
+    Precondition: Member account from test_config can log in and BOOK001 is available.
+    Input/Action: Borrow BOOK001 and confirm the borrow dialog.
+    Expected: BOOK001 becomes borrowed, a borrow record is created, and due date is borrow date + 14 days.
     """
 
     # 1. Login with the account of MEM002
@@ -115,17 +81,8 @@ def test_borrow_book(page, test_config):
     borrowed_book = page.locator('flt-semantics').filter(has_text="BOOK001").filter(has_text="Đang mượn").first
     expect(borrowed_book, "BOOK001's status stayed Available: expect changed to Borrowed").to_be_visible()
 
-    """NOTE: TC-09 is combined with TC-08
-
-    Reason: As the database is volatile (all data is deleted upon closing tab), it is impossible to verify
-    if BOOK001 borrowed in TC-08 has a borrow record created in TC-09. Moreover, it is meaningless to execute
-    TC-09 alone since what we want to see is the borrow records created after borrowing a book, not the
-    seed data.
-
-    TC-09 is still written separately for the sake of completion.
-    """
-
-    # 4.2 check if borrow record is created for BOOK001
+    # TC-09 evidence is checked here because the new borrow record only exists
+    # in the same browser session after BOOK001 is borrowed.
 
     # navigate to the record tab
     page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]').first.click()
@@ -144,26 +101,17 @@ def test_borrow_book(page, test_config):
     borrow_date = datetime.strptime(borrow_match.group(1), "%d/%m/%Y")
     due_date = datetime.strptime(due_match.group(1), "%d/%m/%Y")
 
-    # sleep 5 seconds to wait for the toast message to go away
-    # only for a prettier screenshot
-    time.sleep(5)
-
     assert due_date.date() == (borrow_date + timedelta(days=14)).date(), (
         f"Expected due date {(borrow_date + timedelta(days=14)).date()}, got {due_date.date()}"
     )
 
 
 def test_view_borrowed_books(page, test_config):
-    """TC-09: View borrowed books list (*Xem danh sách sách đang mượn — tab Mượn / Trả*)
+    """TC-09: Verify the borrow/return tab shows active borrow records.
 
-    Description (*Mô tả*):
-        Log in → switch to "Mượn / Trả" tab → verify borrowed books are shown.
-        (*Đăng nhập → chuyển sang tab "Mượn / Trả" → kiểm tra có sách đang mượn.*)
-
-    Hints (*Gợi ý*):
-        - Click tab: page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]')
-        - Verify: books with "Đang mượn" in aria-label, or "Trả sách" button exists
-          (*Kiểm tra: có sách với aria-label chứa "Đang mượn" hoặc có nút "Trả sách"*)
+    Precondition: Member account from test_config can log in.
+    Input/Action: Open the Borrow / Return tab.
+    Expected: A borrow record with active borrowing status is visible.
     """
 
     # 1. Login with the account of MEM002
@@ -179,18 +127,11 @@ def test_view_borrowed_books(page, test_config):
     expect(record, "No borrow record BR001: expect BR001").to_be_visible()
 
 def test_return_book(page, test_config):
-    """TC-10: Return a borrowed book (*Trả sách đang mượn*)
+    """TC-10: Verify returning a borrowed book updates record and book status.
 
-    Description (*Mô tả*):
-        Log in → go to "Mượn / Trả" tab → click "Trả sách" → verify book is returned.
-        (*Đăng nhập → tab "Mượn / Trả" → click "Trả sách" → kiểm tra sách được trả.*)
-
-    Hints (*Gợi ý*):
-        - Switch to "Mượn / Trả" tab (*Chuyển tab "Mượn / Trả"*)
-        - Find return button: page.locator('flt-semantics[role="button"]:has-text("Trả sách")')
-          (*Tìm nút "Trả sách"*)
-        - Click and verify status change or success message
-          (*Click và kiểm tra sách chuyển trạng thái hoặc có thông báo thành công*)
+    Precondition: Member account from test_config can log in and has the seeded borrowed book.
+    Input/Action: Click the return button for the seeded borrow record.
+    Expected: The record becomes returned and the seeded book becomes available again.
     """
 
     # 1. Login with the account of MEM002
@@ -225,16 +166,11 @@ def test_return_book(page, test_config):
 ########################################################
 
 def test_borrow_exceed(page, test_config):
-    """
-    TC-04-13: An active member whose borrow count is 3 borrows a book
+    """TC-04-13: Verify the system blocks borrowing beyond the allowed limit.
 
-    Steps:
-        1. Login with the account of MEM002
-        2. Borrow BOOK001, BOOK002, BOOK005
-        3. Check result (oracle)
-            3.1 Expect refusal: do not accept the request
-            3.2 Expect BOOK005 is still available
-            3.3 Expect no borrow record for BOOK005
+    Precondition: Member account from test_config can log in.
+    Input/Action: Borrow BOOK001, BOOK002, and then BOOK005 in the same session.
+    Expected: The final request is denied, BOOK005 stays available, and no BOOK005 record is created.
     """
     # 1. Login with the account of MEM002
     page.goto(test_config["base_url"], wait_until="load", timeout=60000)
@@ -266,16 +202,11 @@ def test_borrow_exceed(page, test_config):
     expect(record, "Borrow record was created for BOOK005: expect no creation").not_to_be_visible()
 
 def test_suspended_borrow(page, test_config):
-    """
-    TC-04-11: A suspended member whose borrow count is less than 3 borrows an available book
+    """TC-04-11: Verify a suspended member cannot borrow an available book.
 
-    Steps:
-        1. Login with the account of MEM004
-        2. Borrow the book BOOK001
-        3. Check result (oracle)
-            3.1 Error message must mention the member being suspended
-            3.2 Book is still available
-            3.3 No borrow record is created for the book
+    Precondition: SUSPENDED_EMAIL and SUSPENDED_PASSWORD are set in the environment.
+    Input/Action: Log in with the suspended account and attempt to borrow BOOK001.
+    Expected: Suspension error appears, BOOK001 stays available, and no BOOK001 record is created.
     """
     
     # 1. Login with the account of MEM004
@@ -312,16 +243,11 @@ def test_suspended_borrow(page, test_config):
     expect(record, "Borrow record created for BOOK001: expect no creation").not_to_be_visible()
 
 def test_expired_borrow(page, test_config):
-    """
-    TC-04-12: An expired member whose borrow count is less than 3 borrows an available book
+    """TC-04-12: Verify an expired member cannot borrow an available book.
 
-    Steps:
-        1. Login with the account of MEM005
-        2. Borrow the book BOOK001
-        3. Check result (oracle)
-            3.1 Error message must mention the member being expired
-            3.2 Book is still available
-            3.3 No borrow record is created for the book
+    Precondition: EXPIRED_EMAIL and EXPIRED_PASSWORD are set in the environment.
+    Input/Action: Log in with the expired account and attempt to borrow BOOK001.
+    Expected: Expiration error appears, BOOK001 stays available, and no BOOK001 record is created.
     """
 
     # 1. Login with the account of MEM005

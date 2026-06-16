@@ -24,10 +24,13 @@ def _safe_screenshot_name(nodeid):
         "switch_language_to_english": "language_en",
         "search_book_by_name": "name",
         "search_book_no_result": "empty",
+        "search_no_result": "empty",
         "filter_by_category": "category",
+        "filter_category": "category",
         "search_by_author": "author",
         "search_bar_case_insensitive": "case",
         "category_bar_case_insensitive": "category_case",
+        "case_insensitive": "case",
         "login_ok": "ok",
         "login_wrong_password": "wrong_password",
         "login_empty_fields": "empty",
@@ -50,6 +53,12 @@ def _safe_screenshot_name(nodeid):
         "member_tab": "member_tab",
         "foreign_return": "foreign",
     }
+    param_aliases = {
+        "search_bar_lower": "lower",
+        "search_bar_upper": "upper",
+        "category_bar_lower": "cat_lower",
+        "category_bar_upper": "cat_upper",
+    }
 
     path, _, test_name = nodeid.partition("::")
     module = os.path.splitext(os.path.basename(path))[0]
@@ -62,7 +71,8 @@ def _safe_screenshot_name(nodeid):
     case_name = case_name.removeprefix(f"{module}_")
     short_name = f"{module}_{case_name}"
     if params:
-        short_name = f"{short_name}_{params.rstrip(']')}"
+        param_name = params.rstrip("]")
+        short_name = f"{short_name}_{param_aliases.get(param_name, param_name)}"
 
     return "".join(
         char if char.isalnum() or char in "._-" else "_"

@@ -218,7 +218,7 @@ addopts = -v --tb=short
 
 ## 11. Test Scenarios Covered
 
-The implemented suite contains 28 automated test functions across five test modules.
+The implemented suite contains 31 collected automated test items across five test modules.
 
 | Test Area | Scenarios |
 |---|---|
@@ -238,11 +238,11 @@ The implemented suite contains 28 automated test functions across five test modu
 | File | Number of Tests | Main Coverage |
 |---|---:|---|
 | `tests/test_login.py` | 7 | Login success and validation scenarios. |
-| `tests/test_search.py` | 6 | Book search and filtering. |
+| `tests/test_search.py` | 8 | Book search, filtering, and data-driven case-insensitive checks. |
 | `tests/test_borrow_return.py` | 6 | Borrowing, returning, limits, and eligibility. |
 | `tests/test_general.py` | 2 | Logout and language switching. |
 | `tests/test_bonus.py` | 8 | Overdue handling, member management, role access, and record ownership. |
-| **Total** | **28** | **Core and extended functional workflows.** |
+| **Total** | **31 collected test items** | **Core and extended functional workflows.** |
 
 Requirement alignment:
 
@@ -257,7 +257,39 @@ Requirement alignment:
 | Member management | Member creation, email validation, duplicate email handling, role-based access. |
 | Borrow record lookup | Personal records and ownership-based return behavior. |
 
-## 13. Test Data Management
+## 13. Test Execution Results
+
+The suite was collected successfully with:
+
+```bash
+pytest --collect-only -q
+```
+
+Pytest collected 31 test items without syntax or discovery errors. Selected execution results are summarized below.
+
+| Test Module | Result Summary | Notes |
+|---|---|---|
+| `tests/test_login.py` | 7 passed | Required login cases and librarian login passed. |
+| `tests/test_search.py` | 6 passed, 2 failed | Required search/filter cases passed. The two failed cases expose category-filter case sensitivity. |
+| `tests/test_borrow_return.py` | 4 passed, 2 failed | Required borrow/view/return cases passed. Failed extended cases expose borrow-rule defects. |
+| `tests/test_general.py` | 1 passed, 1 failed | Logout passed. English language switch did not expose expected English UI text. |
+| `tests/test_bonus.py` | 2 passed, 6 failed | Failed bonus tests document SRS/business-rule defects. |
+
+Failed tests are kept intentionally because the assignment accepts PASS or FAIL outcomes when tests execute and contain meaningful assertions. In this project, failing tests represent observed application behavior that does not match the SRS or business rules.
+
+## 14. Known Bugs Found
+
+| ID | Related Requirement | Failing Test Evidence | Observed Behavior |
+|---|---|---|---|
+| BUG-01 | REQ-03 / BR-10: search and filtering must be case-insensitive | `test_case_insensitive[category_bar_lower]`, `test_case_insensitive[category_bar_upper]` | Category filter returns no books for lowercase or uppercase variants of "Công nghệ". |
+| BUG-02 | REQ-04: maximum 3 active borrowed books per member | `test_borrow_exceed` | Member can borrow a fourth book instead of receiving a refusal. |
+| BUG-03 | REQ-04: suspended members cannot borrow | `test_suspended_borrow` | Suspended member does not receive the expected suspension-specific refusal. |
+| BUG-04 | REQ-05/REQ-06: overdue return must show a clear warning | `test_due_date`, `test_overdue_book` | Returning overdue or boundary-due records succeeds without a clear overdue warning. |
+| BUG-05 | REQ-07: valid member email should be accepted and invalid email should be rejected | `test_valid_member`, `test_domain_dot`, `test_duplicate_email` | Email validation behavior is inconsistent with the SRS, including accepting `user@domain` and rejecting a valid email in one scenario. |
+| BUG-06 | REQ-08: members must not operate on other members' borrow records | `test_foreign_return` | A member can see a return action for another member's borrow record. |
+| BUG-07 | SRS technical constraint: bilingual UI | `test_switch_language_to_english` | Clicking EN does not expose expected English UI text such as Logout, Borrow, Search, or Library. |
+
+## 15. Test Data Management
 
 The project uses deterministic seed data provided by the application and configurable test accounts from environment variables.
 
@@ -273,7 +305,7 @@ The project uses deterministic seed data provided by the application and configu
 
 Each test receives an isolated Playwright browser context. This allows tests to execute from a controlled application state and supports repeatable demonstrations.
 
-## 14. Reporting and Evidence Collection
+## 16. Reporting and Evidence Collection
 
 The framework provides evidence through automated screenshots and Pytest console output.
 
@@ -288,7 +320,7 @@ The framework provides evidence through automated screenshots and Pytest console
 
 Screenshot filenames are generated from test identifiers so that evidence can be matched to the corresponding scenario.
 
-## 15. Challenges Encountered
+## 17. Challenges Encountered
 
 The project involved several testing challenges related to the application technology and workflow characteristics.
 
@@ -303,7 +335,7 @@ The project involved several testing challenges related to the application techn
 
 These challenges shaped the framework design and led to a specialized automation approach for Flutter Web.
 
-## 16. Solutions Implemented
+## 18. Solutions Implemented
 
 The framework implements several solutions to support reliable end-to-end testing.
 
@@ -321,7 +353,7 @@ The framework implements several solutions to support reliable end-to-end testin
 
 These solutions make the framework reusable across test files and maintain a clear separation between test scenarios and technical interaction details.
 
-## 17. Results and Achievements
+## 19. Results and Achievements
 
 The project produced a complete automation testing framework for a Flutter Web CanvasKit application.
 
@@ -337,9 +369,9 @@ Key achievements include:
 | Evidence-based testing | Screenshots are collected automatically for review and presentation. |
 | Requirement-oriented coverage | Test scenarios are aligned with major SRS requirement areas. |
 
-The final suite contains 28 automated test functions covering both required assignment scenarios and extended business workflows.
+The final suite contains 31 collected test items covering both required assignment scenarios and extended business workflows.
 
-## 18. Conclusion
+## 20. Conclusion
 
 This project successfully delivers an automation testing framework for the Library Book Borrowing System. The framework demonstrates how Pytest and Playwright can be adapted for a Flutter Web CanvasKit application by using the Flutter Accessibility Semantics Tree as the primary interaction layer.
 
@@ -347,7 +379,7 @@ From a software testing perspective, the project verifies important library work
 
 The completed work represents a practical automated testing deliverable for a modern web application with non-standard rendering behavior.
 
-## 19. Future Enhancements
+## 21. Future Enhancements
 
 Future development may extend the existing framework in the following directions:
 
