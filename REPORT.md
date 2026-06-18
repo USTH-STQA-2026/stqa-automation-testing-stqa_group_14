@@ -2,6 +2,8 @@
 
 ## Automation Testing Framework for Flutter Web CanvasKit Library Book Borrowing System
 
+**Link GitHub repo:** https://github.com/USTH-STQA-2026/stqa-automation-testing-stqa_group_14/
+
 ## 1. Executive Summary
 
 This project presents a completed automation testing framework for the Library Book Borrowing System hosted at `https://stqa.rbc.vn`. The system supports digital library operations such as member authentication, book search, borrowing, returning, overdue handling, member administration, and bilingual user interaction.
