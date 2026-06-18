@@ -11,7 +11,95 @@ TEST_EMAIL = os.getenv("TEST_EMAIL", "")
 TEST_PASSWORD = os.getenv("TEST_PASSWORD", "")
 TEST_DISPLAY_NAME = os.getenv("TEST_DISPLAY_NAME", "")
 SCREENSHOT_DIR = os.path.join(os.path.dirname(__file__), "screenshots")
+PASS_SCREENSHOT_DIR = os.path.join(SCREENSHOT_DIR, "pass")
+BUG_SCREENSHOT_DIR = os.path.join(SCREENSHOT_DIR, "bug")
 os.makedirs(SCREENSHOT_DIR, exist_ok=True)
+os.makedirs(PASS_SCREENSHOT_DIR, exist_ok=True)
+os.makedirs(BUG_SCREENSHOT_DIR, exist_ok=True)
+
+
+def _safe_screenshot_name(nodeid):
+    """Create a short filesystem-safe screenshot name from a pytest node id."""
+    case_aliases = {
+        "switch_language_to_english": "language_en",
+        "search_book_by_name": "name",
+        "search_book_no_result": "empty",
+        "search_no_result": "empty",
+        "filter_by_category": "category",
+        "filter_category": "category",
+        "search_by_author": "author",
+        "search_bar_case_insensitive": "case",
+        "category_bar_case_insensitive": "category_case",
+        "case_insensitive": "case",
+        "login_ok": "ok",
+        "login_wrong_password": "wrong_password",
+        "login_empty_fields": "empty",
+        "login_unknown_email": "unknown_email",
+        "login_no_password": "no_password",
+        "login_no_email": "no_email",
+        "login_librarian": "librarian",
+        "borrow_book": "book",
+        "view_borrowed_books": "list",
+        "return_book": "return",
+        "borrow_exceed": "limit",
+        "suspended_borrow": "suspended",
+        "expired_borrow": "expired",
+        "due_date": "due",
+        "overdue_book": "overdue",
+        "valid_member": "member_ok",
+        "domain_dot": "no_dot",
+        "no_at": "no_at",
+        "duplicate_email": "dup_email",
+        "member_tab": "member_tab",
+        "foreign_return": "foreign",
+    }
+    param_aliases = {
+        "search_bar_lower": "lower",
+        "search_bar_upper": "upper",
+        "category_bar_lower": "cat_lower",
+        "category_bar_upper": "cat_upper",
+    }
+
+    path, _, test_name = nodeid.partition("::")
+    module = os.path.splitext(os.path.basename(path))[0]
+    module = module.removeprefix("test_").removeprefix("test-")
+    module = {"borrow_return": "borrow"}.get(module, module)
+
+    case_name, _, params = test_name.partition("[")
+    case_name = case_name.removeprefix("test_")
+    case_name = case_aliases.get(case_name, case_name)
+    case_name = case_name.removeprefix(f"{module}_")
+    short_name = f"{module}_{case_name}"
+    if params:
+        param_name = params.rstrip("]")
+        short_name = f"{short_name}_{param_aliases.get(param_name, param_name)}"
+
+    return "".join(
+        char if char.isalnum() or char in "._-" else "_"
+        for char in short_name
+    )
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    setattr(item, f"rep_{call.when}", outcome.get_result())
+
+
+@pytest.fixture(autouse=True)
+def capture_test_evidence(request, page):
+    yield
+    report = getattr(request.node, "rep_call", None)
+    if report is None:
+        return
+
+    result_dir = PASS_SCREENSHOT_DIR if report.passed else BUG_SCREENSHOT_DIR
+    screenshot_name = f"{_safe_screenshot_name(request.node.nodeid)}.png"
+    screenshot_path = os.path.join(result_dir, screenshot_name)
+    try:
+        page.screenshot(path=screenshot_path, full_page=True)
+    except Exception as exc:
+        print(f"\n[screenshot] Could not capture {screenshot_path}: {exc}")
 
 
 # ---------------------------------------------------------------------------
